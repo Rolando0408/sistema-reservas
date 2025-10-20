@@ -1,0 +1,117 @@
+.loginContainer {
+  background-color: white;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  color: black;
+}
+
+.loginSidebar {
+  background-color: #24243e;
+  width: 30%;
+}
+
+.loginMain {
+  flex-grow: 1;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+h1 {
+  font-size: 50px;
+  margin-bottom: 0;
+}
+
+p {
+  margin-top: 0;
+  font-size: 20px;
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  width: 300px;
+}
+
+.formGroup {
+  width: 100%;
+}
+
+input {
+  color: black;
+  font-size: 16px;
+}
+
+.inputWithIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 60px;
+}
+
+.inputWithIcon .icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aaa;
+}
+
+.inputWithIcon input {
+  padding-left: 40px; /* Espacio para el icono */
+  padding-right: 40px; /* Espacio para el ojo */
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
+  background-color: white;
+  border: 1px solid #757575;
+  border-radius: 4px;
+}
+
+.inputWithIcon .iconRight {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  cursor: pointer;
+}
+
+.loginButton {
+  background-color: #24243e;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px;
+}
+
+.loginButton:hover {
+  background-color: #3a3a5c;
+}
+
+.loginLogo {
+  text-align: center;
+  padding: 20px;
+  padding-top: 40%;
+  img {
+    max-width: 80%;
+    height: auto;
+  }
+}
+
+.pRegister {
+  margin-top: 20px;
+}
