@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import supabase from "../lib/supabaseClient";
-import "./Login.css"; // Reuse the same styles as Login to keep design consistent
-import "./Register.css"; // Keep for future overrides if needed
+import "./Login.css";
+import "./Register.css"; 
 import logo from "../assets/logo-3.png";
 import {
   AiOutlineUser,
@@ -48,7 +48,6 @@ export default function Register() {
 
       if (error) throw error;
 
-      // Con confirmación de email desactivada, debemos tener un userId
       const userId = data?.user?.id;
       if (!userId)
         throw new Error(
@@ -56,13 +55,12 @@ export default function Register() {
         );
 
       if (userId) {
-        // Paso 2: Insertar/actualizar idempotente en tu tabla pública `usuarios`
         const { error: upsertError } = await supabase.from("usuarios").upsert(
           {
             id: userId,
             nombre_completo: fullName,
             email: email,
-            id_rol_fk: 2, // ajuste al esquema actual
+            id_rol_fk: 2, 
           },
           { onConflict: "id" }
         );
