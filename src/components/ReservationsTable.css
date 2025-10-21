@@ -1,0 +1,96 @@
+.estado-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px; /* pill */
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+/* Pendiente - amber */
+.estado-pendiente {
+  background-color: #fef3c7; /* amber-100 */
+  color: #92400e; /* amber-700 */
+  border-color: #fcd34d; /* amber-300 */
+}
+
+/* Activa - green */
+.estado-activa {
+  background-color: #dcfce7; /* green-100 */
+  color: #065f46; /* green-700 */
+  border-color: #86efac; /* green-300 */
+}
+
+/* Cancelada - red */
+.estado-cancelada {
+  background-color: #fee2e2; /* red-100 */
+  color: #991b1b; /* red-700 */
+  border-color: #fca5a5; /* red-300 */
+}
+
+/* Finalizada - indigo */
+.estado-finalizada {
+  background-color: #e0e7ff; /* indigo-100 */
+  color: #3730a3; /* indigo-700 */
+  border-color: #a5b4fc; /* indigo-300 */
+}
+
+/* Desconocido - gray */
+.estado-desconocido {
+  background-color: #e5e7eb; /* gray-200 */
+  color: #374151; /* gray-700 */
+  border-color: #d1d5db; /* gray-300 */
+}
+
+/* Action icon button styles */
+.dt-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent; /* no background by default */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px; /* a bit larger */
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.dt-icon-btn .icon {
+  width: 22px; /* larger icon */
+  height: 22px;
+}
+.dt-icon-btn--danger {
+  color: #6b7280; /* gray-600: visible on white background */
+}
+.dt-icon-btn--danger:hover {
+  background-color: #f3f4f6; /* light gray highlight on hover */
+  color: #111827; /* gray-900: dark icon lines on hover */
+}
+
+/* Equipamiento badges */
+.equip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  background-color: #f3f4f6; /* gray-100 */
+  color: #111827; /* gray-900 */
+  margin: 2px;
+}
+.equip-badge .icon {
+  width: 16px;
+  height: 16px;
+}
+.equip-equipo {
+  border-color: #c7d2fe; /* indigo-200 */
+}
+.equip-laptop {
+  border-color: #bae6fd; /* sky-200 */
+}
+.equip-extension {
+  border-color: #fde68a; /* amber-300 */
+}

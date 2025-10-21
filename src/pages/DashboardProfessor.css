@@ -1,0 +1,73 @@
+body {
+  background-color: #ffff;
+}
+.prof-dashboard {
+  background-color: #ffff;
+  color: black;
+}
+
+.DashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background-color: #24243e;
+  padding: 30px 20px;
+}
+
+.titleDash {
+  font-size: 1.8em;
+  margin: 0;
+  color: white;
+  font-weight: normal;
+}
+
+.btnLogOut {
+  background-color: #ffff;
+  color: #0a0a0a;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.titleReservas {
+  margin: 0;
+}
+
+.reservations-table {
+  width: 100%;
+  margin: 0;
+}
+
+.lista-reservas {
+  margin: 20px auto;
+  width: 80%;
+}
+
+/* Alinear el contenedor de DataTables con el header */
+.lista-reservas .dataTables_wrapper {
+  margin: 0;
+}
+
+.lista-reservas table.dataTable {
+  width: 100% !important;
+}
+
+.reservas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.btnCreateReserva {
+  background-color: #24243e;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}

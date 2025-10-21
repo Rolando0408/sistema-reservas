@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import supabase from "../lib/supabaseClient";
 import "./Login.css";
 import logo from "../assets/logo-3.png";
@@ -17,6 +17,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -30,13 +31,30 @@ export default function Login() {
 
       if (error) throw error;
 
+      // Obtener perfil del usuario para saber el rol
+      const userId = data?.user?.id;
+      if (!userId) throw new Error("No se pudo obtener el usuario");
+
+      const { data: perfil, error: perfilErr } = await supabase
+        .from("usuarios")
+        .select("id, id_rol_fk")
+        .eq("id", userId)
+        .single();
+      if (perfilErr) throw perfilErr;
+
       await Swal.fire({
         title: "¡Bienvenido!",
         text: "Has iniciado sesión correctamente",
         icon: "success",
         confirmButtonText: "Continuar",
       });
-      console.log(data);
+
+      if (perfil?.id_rol_fk === 2) {
+        navigate("/dashboard-professor");
+      } else {
+        // Por ahora, los demás roles se quedan en login o redirige a otra vista si la tienes
+        // navigate("/");
+      }
     } catch (error) {
       await Swal.fire({
         title: "Error al iniciar sesión",
