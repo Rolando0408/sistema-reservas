@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import supabase from "../lib/supabaseClient";
 import "./Login.css";
-import "./Register.css"; 
+import "./Register.css";
 import logo from "../assets/logo-3.png";
 import {
   AiOutlineUser,
@@ -43,42 +43,54 @@ export default function Register() {
         password,
         options: {
           data: { full_name: fullName },
+          // Importante para confirmación por email: redirigir al callback
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
       if (error) throw error;
 
       const userId = data?.user?.id;
-      if (!userId)
-        throw new Error(
-          "No se pudo obtener el ID de usuario tras el registro."
-        );
+      if (!userId) throw new Error("No se pudo crear el usuario.");
 
-      if (userId) {
-        const { error: upsertError } = await supabase.from("usuarios").upsert(
-          {
-            id: userId,
-            nombre_completo: fullName,
-            email: email,
-            id_rol_fk: 2, 
-          },
-          { onConflict: "id" }
-        );
-
-        if (upsertError) {
-          throw upsertError;
-        }
-
+      // Si la confirmación por email está habilitada, Supabase no devuelve session aquí
+      // Mostramos instrucción de verificación y no intentamos escribir en BD hasta el callback
+      if (!data?.session) {
         await Swal.fire({
-          title: "¡Cuenta creada!",
-          text: "Tu perfil ha sido registrado correctamente.",
-          icon: "success",
-          confirmButtonText: "Ir a iniciar sesión",
+          title: "Verifica tu correo",
+          text: "Te hemos enviado un enlace de confirmación. Abre tu correo y confirma tu cuenta para continuar.",
+          icon: "info",
+          confirmButtonText: "Entendido",
         });
-
+        // Opcional: redirigir al login
         window.location.href = "/";
         return;
       }
+
+      // Si por configuración ya viene con sesión (auto-confirm), creamos el perfil de una vez
+      const { error: upsertError } = await supabase.from("usuarios").upsert(
+        {
+          id: userId,
+          nombre_completo: fullName,
+          email: email,
+          id_rol_fk: 2,
+        },
+        { onConflict: "id", returning: "minimal" }
+      );
+
+      if (upsertError) {
+        throw upsertError;
+      }
+
+      await Swal.fire({
+        title: "¡Cuenta creada!",
+        text: "Tu perfil ha sido registrado correctamente.",
+        icon: "success",
+        confirmButtonText: "Ir a iniciar sesión",
+      });
+
+      window.location.href = "/";
+      return;
     } catch (error) {
       const msg = (error?.message || "").toLowerCase();
       if (
