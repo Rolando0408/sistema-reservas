@@ -27,71 +27,39 @@ export default function Register() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      await Swal.fire({
-        title: "Las contraseñas no coinciden",
-        text: "Por favor, verifica que ambas contraseñas sean iguales.",
-        icon: "warning",
-        confirmButtonText: "Entendido",
-      });
+      await Swal.fire(/* ... Contraseñas no coinciden ... */);
       return;
     }
 
     try {
       setLoading(true);
+      // --- PASO 1: SOLO signUp CON METADATA ---
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: email,
+        password: password,
         options: {
-          data: { full_name: fullName },
-          // Importante para confirmación por email: redirigir al callback
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: fullName, // El trigger leerá esto
+          },
         },
       });
 
       if (error) throw error;
 
-      const userId = data?.user?.id;
-      if (!userId) throw new Error("No se pudo crear el usuario.");
-
-      // Si la confirmación por email está habilitada, Supabase no devuelve session aquí
-      // Mostramos instrucción de verificación y no intentamos escribir en BD hasta el callback
-      if (!data?.session) {
-        await Swal.fire({
-          title: "Verifica tu correo",
-          text: "Te hemos enviado un enlace de confirmación. Abre tu correo y confirma tu cuenta para continuar.",
-          icon: "info",
-          confirmButtonText: "Entendido",
-        });
-        // Opcional: redirigir al login
-        window.location.href = "/";
-        return;
-      }
-
-      // Si por configuración ya viene con sesión (auto-confirm), creamos el perfil de una vez
-      const { error: upsertError } = await supabase.from("usuarios").upsert(
-        {
-          id: userId,
-          nombre_completo: fullName,
-          email: email,
-          id_rol_fk: 2,
-        },
-        { onConflict: "id", returning: "minimal" }
-      );
-
-      if (upsertError) {
-        throw upsertError;
-      }
-
+      // --- PASO 2: MOSTRAR MENSAJE DE VERIFICACIÓN ---
+      // Asumiendo que SIEMPRE tendrás la confirmación de email activada
       await Swal.fire({
-        title: "¡Cuenta creada!",
-        text: "Tu perfil ha sido registrado correctamente.",
-        icon: "success",
-        confirmButtonText: "Ir a iniciar sesión",
+        title: "Verifica tu correo",
+        text: "Te hemos enviado un enlace de confirmación. Abre tu correo y confirma tu cuenta para poder iniciar sesión.",
+        icon: "info",
+        confirmButtonText: "Entendido",
       });
 
-      window.location.href = "/";
-      return;
+      // Opcional: Limpiar formulario o redirigir al login
+      // setEmail(''); setPassword(''); setConfirmPassword(''); setFullName('');
+      window.location.href = "/"; // Redirige al login
     } catch (error) {
+      // --- MANEJO DE ERRORES (Tu código actual es bueno) ---
       const msg = (error?.message || "").toLowerCase();
       if (
         msg.includes("already") ||
@@ -100,17 +68,14 @@ export default function Register() {
       ) {
         await Swal.fire({
           title: "Este email ya está registrado",
-          text: "Inicia sesión.",
+          text: "Intenta iniciar sesión.",
           icon: "warning",
           confirmButtonText: "Entendido",
         });
       } else {
         await Swal.fire({
           title: "Error al registrarse",
-          text:
-            error?.error_description ||
-            error?.message ||
-            "Ocurrió un error inesperado",
+          text: error?.message || "Ocurrió un error inesperado",
           icon: "error",
           confirmButtonText: "Entendido",
         });
