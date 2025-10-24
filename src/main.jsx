@@ -1,7 +1,7 @@
 // src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import "./index.css"; // ✅ Importa el CSS de Tailwind/shadcn
 
 import { AuthProvider } from "./lib/AuthContext.jsx"; // ✅ Importa el gestor de sesión
@@ -20,6 +20,10 @@ const router = createBrowserRouter([
     children: [
       { path: "", element: <DashboardProfesor /> }, // Dashboard del profesor
     ],
+  },
+  {
+    path: "/auth/callback", // La ruta que Supabase usa
+    element: <Navigate to="/dashboard" replace />, // Redirige al dashboard
   },
 ]);
 
