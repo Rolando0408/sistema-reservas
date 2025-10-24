@@ -411,6 +411,22 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
     }
   };
 
+      const resetFormulario = () => {
+        console.log("INTENTANDO LIMPIAR FORMULARIO...");
+        setFecha(undefined);
+        setHoraInicioId("");
+        setHoraFinId("");
+        setConnectionType("");
+        setEquipoId("");
+        setLaptopId("none");
+        setExtensionId("none");
+        setDecanatoId("none");
+        setAula("");
+        setEquiposDisponibles([]);
+        setLaptopsDisponibles([]);
+        setExtensionesDisponibles([]);
+      };
+
   return (
     <div className="prof-dashboard">
       <div className="DashboardHeader">
@@ -421,7 +437,12 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
         </button>
       </div>
       {/* Modal para crear reserva */}
-      <Dialog open={openModal} onOpenChange={setOpenModal}>
+      <Dialog
+        open={openModal}
+        onOpenChange={(isOpen) => {
+          console.log("onOpenChange disparado. isOpen:", isOpen);
+          setOpenModal(isOpen);
+          if (!isOpen) {resetFormulario();}}}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Nueva Reservación</DialogTitle>
@@ -496,11 +517,10 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
                 </SelectTrigger>
                 <SelectContent>
                   {horariosFinFiltrados.map((h) => (
-                      <SelectItem key={h.id} value={String(h.id)}>
-                        {h.descripcion}
-                      </SelectItem>
-                    )
-                  )}
+                    <SelectItem key={h.id} value={String(h.id)}>
+                      {h.descripcion}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
