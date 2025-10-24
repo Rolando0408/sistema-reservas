@@ -13,7 +13,7 @@ import ProtectedRoute from "./lib/ProtectedRoute.jsx";
 // Define las rutas de tu aplicación
 const router = createBrowserRouter([
   { path: "/", element: <Login /> },
-  { path: "/registro", element: <Register /> },
+  { path: "/register", element: <Register /> },
   {
     path: "/dashboard",
     element: <ProtectedRoute />, // Ruta protegida
