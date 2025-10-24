@@ -94,3 +94,63 @@
 .equip-extension {
   border-color: #fde68a; /* amber-300 */
 }
+
+/* TanStack table styles */
+.reservations-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.reservations-table th,
+.reservations-table td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+.reservations-table thead th {
+  background: transparent;
+  font-weight: 700;
+}
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.table-search {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffff;
+}
+.pagination-controls button {
+  padding: 6px 10px;
+  margin: 0 4px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  cursor: pointer;
+  color: black;
+}
+.table-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+.equip-container {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.page-size select{
+  background-color: #ffff;
+  color: black;
+  border-color: #d1d5db;
+  margin-left: 10px;
+  font-family: montserrat, sans-serif;
+  text-align: center;
+  border-radius: 5px;
+}
+

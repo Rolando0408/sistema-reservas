@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import supabase from "../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import "./Login.css";
 import logo from "../assets/logo-3.png";
 import {
@@ -50,7 +50,7 @@ export default function Login() {
       });
 
       if (perfil?.id_rol_fk === 2) {
-        navigate("/dashboard-professor");
+        navigate("/dashboard");
       } else {
         // Por ahora, los demás roles se quedan en login o redirige a otra vista si la tienes
         // navigate("/");

@@ -71,3 +71,7 @@ body {
   border-radius: 6px;
   cursor: pointer;
 }
+
+.modal-close{
+  color: #24243e;
+}

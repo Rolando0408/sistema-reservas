@@ -4,7 +4,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
 import DashboardProfessor from "./pages/DashboardProfessor.jsx";
-import "./App.css";
+//import "./App.css";
 
 function App() {
   return (

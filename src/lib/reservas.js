@@ -1,6 +1,8 @@
-import supabase from "./supabaseClient";
-
-// Asunciones de estados (confírmame si difieren):
+// src/lib/reservas.js
+import { supabase } from "@/lib/supabaseClient";
+import { parse } from "date-fns"; // Para convertir strings a objetos Date
+// En date-fns-tz v3 la función correcta para convertir a UTC desde una zona es 'fromZonedTime'
+import { fromZonedTime } from "date-fns-tz";
 // 0 = pendiente, 1 = activa, 2 = cancelada, 3 = finalizada
 export const ESTADOS_RESERVA = {
   PENDIENTE: 0,
@@ -11,18 +13,14 @@ export const ESTADOS_RESERVA = {
 
 const ESTADOS_BLOQUEAN = [ESTADOS_RESERVA.PENDIENTE, ESTADOS_RESERVA.ACTIVA];
 
-// Zona horaria oficial
-const TZ = "America/Caracas";
-// Offset actual de Caracas (UTC-04:00). Si necesitas exactitud histórica, podemos calcular dinámicamente.
-const TZ_OFFSET = "-04:00";
+// Zona horaria de Venezuela para las conversiones
+const TIME_ZONE = "America/Caracas";
 
-// Convierte una fecha (YYYY-MM-DD) y un time (HH:MM:SS) a ISO con offset de Caracas
-export function toCaracasISO(dateYYYYMMDD, timeHHMMSS) {
-  return `${dateYYYYMMDD}T${timeHHMMSS}${TZ_OFFSET}`;
-}
+// No necesitamos toCaracasISO ni TZ_OFFSET
+// export function toCaracasISO(dateYYYYMMDD, timeHHMMSS) { ... }
 
 export function nowISO() {
-  return new Date().toISOString();
+  return new Date().toISOString(); // Siempre devuelve UTC
 }
 
 // Util: obtener usuario actual
@@ -33,7 +31,7 @@ async function getUserId() {
   return id;
 }
 
-// Catálogos
+// Catálogos (Sin cambios aquí)
 export async function getEquipos({ onlyDisponibles = true } = {}) {
   let query = supabase
     .from("equipos")
@@ -70,7 +68,7 @@ export async function getExtensiones({ onlyDisponibles = true } = {}) {
 export async function getHorarios() {
   const { data, error } = await supabase
     .from("horarios")
-    .select("id, descripcion, hora")
+    .select("id, descripcion, hora") // Asume que 'hora' es HH:mm:ss
     .order("hora", { ascending: true });
   if (error) throw error;
   return data || [];
@@ -85,15 +83,27 @@ export async function getDecanatos() {
   return data || [];
 }
 
-// Helpers horarios
+// Helpers horarios (Sin cambios)
 export async function getHorarioById(id) {
   const { data, error } = await supabase
     .from("horarios")
-    .select("id, hora")
+    .select("id, hora") // Necesitamos la hora (HH:mm:ss)
     .eq("id", id)
     .single();
   if (error) throw error;
   return data;
+}
+
+// --- FUNCIONES MODIFICADAS PARA USAR UTC ---
+
+// Convierte YYYY-MM-DD y HH:MM:SS a objeto Date UTC
+function getUTCDateTime(dateYYYYMMDD, timeHHMMSS) {
+  const localDateTime = parse(
+    `${dateYYYYMMDD} ${timeHHMMSS}`,
+    "yyyy-MM-dd HH:mm:ss",
+    new Date()
+  );
+  return fromZonedTime(localDateTime, TIME_ZONE);
 }
 
 // Disponibilidad de equipos para un rango: devuelve solo los equipos disponibles
@@ -109,8 +119,11 @@ export async function listEquiposDisponibles({
     getHorarioById(endHorarioId),
   ]);
 
-  const startISO = toCaracasISO(dateYYYYMMDD, horaInicio);
-  const endISO = toCaracasISO(dateYYYYMMDD, horaFin);
+  // Convierte a UTC y obtiene ISO string
+  const startUTC = getUTCDateTime(dateYYYYMMDD, horaInicio);
+  const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
+  const startISO_UTC = startUTC.toISOString();
+  const endISO_UTC = endUTC.toISOString();
 
   // Equipos activos/operativos
   let eqQuery = supabase
@@ -125,13 +138,13 @@ export async function listEquiposDisponibles({
 
   const equipoIds = equipos.map((e) => e.id);
 
-  // Buscar reservas que se solapen: (inicio < end) AND (fin > start)
+  // Buscar reservas que se solapen usando UTC ISO strings
   const { data: reservasSolape, error: resErr } = await supabase
     .from("reservas")
     .select("id, id_equipo")
     .in("id_equipo", equipoIds)
-    .lt("fecha_hora_inicio", endISO)
-    .gt("fecha_hora_fin", startISO)
+    .lt("fecha_hora_inicio", endISO_UTC) // Compara con UTC
+    .gt("fecha_hora_fin", startISO_UTC) // Compara con UTC
     .in("estado", ESTADOS_BLOQUEAN);
   if (resErr) throw resErr;
   const ocupados = new Set((reservasSolape || []).map((r) => r.id_equipo));
@@ -148,8 +161,12 @@ export async function listLaptopsDisponibles({
     getHorarioById(startHorarioId),
     getHorarioById(endHorarioId),
   ]);
-  const startISO = toCaracasISO(dateYYYYMMDD, horaInicio);
-  const endISO = toCaracasISO(dateYYYYMMDD, horaFin);
+
+  // Convierte a UTC y obtiene ISO string
+  const startUTC = getUTCDateTime(dateYYYYMMDD, horaInicio);
+  const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
+  const startISO_UTC = startUTC.toISOString();
+  const endISO_UTC = endUTC.toISOString();
 
   const { data: laptops, error: lErr } = await supabase
     .from("laptops")
@@ -163,8 +180,8 @@ export async function listLaptopsDisponibles({
     .from("reservas")
     .select("id, id_laptop")
     .in("id_laptop", ids)
-    .lt("fecha_hora_inicio", endISO)
-    .gt("fecha_hora_fin", startISO)
+    .lt("fecha_hora_inicio", endISO_UTC) // Compara con UTC
+    .gt("fecha_hora_fin", startISO_UTC) // Compara con UTC
     .in("estado", ESTADOS_BLOQUEAN);
   if (rErr) throw rErr;
   const ocupados = new Set((reservasSolape || []).map((r) => r.id_laptop));
@@ -180,8 +197,12 @@ export async function listExtensionesDisponibles({
     getHorarioById(startHorarioId),
     getHorarioById(endHorarioId),
   ]);
-  const startISO = toCaracasISO(dateYYYYMMDD, horaInicio);
-  const endISO = toCaracasISO(dateYYYYMMDD, horaFin);
+
+  // Convierte a UTC y obtiene ISO string
+  const startUTC = getUTCDateTime(dateYYYYMMDD, horaInicio);
+  const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
+  const startISO_UTC = startUTC.toISOString();
+  const endISO_UTC = endUTC.toISOString();
 
   const { data: extensiones, error: eErr } = await supabase
     .from("extensiones")
@@ -195,8 +216,8 @@ export async function listExtensionesDisponibles({
     .from("reservas")
     .select("id, id_extension")
     .in("id_extension", ids)
-    .lt("fecha_hora_inicio", endISO)
-    .gt("fecha_hora_fin", startISO)
+    .lt("fecha_hora_inicio", endISO_UTC) // Compara con UTC
+    .gt("fecha_hora_fin", startISO_UTC) // Compara con UTC
     .in("estado", ESTADOS_BLOQUEAN);
   if (rErr) throw rErr;
   const ocupados = new Set((reservasSolape || []).map((r) => r.id_extension));
@@ -204,10 +225,11 @@ export async function listExtensionesDisponibles({
 }
 
 // Lista reservas del profesor (tabla y calendario)
+// Esta función NO cambia, ya que compara fechas ISO directamente
 export async function listMisReservas({
   futuras = true,
-  rangeStartISO,
-  rangeEndISO,
+  rangeStartISO, // Espera UTC ISO
+  rangeEndISO, // Espera UTC ISO
 } = {}) {
   const userId = await getUserId();
   let query = supabase
@@ -218,8 +240,9 @@ export async function listMisReservas({
     .eq("id_usuario", userId);
 
   if (futuras) {
-    query = query.gte("fecha_hora_fin", nowISO());
+    query = query.gte("fecha_hora_fin", nowISO()); // nowISO() ya es UTC
   }
+  // Estas comparaciones funcionan bien con UTC ISO strings
   if (rangeStartISO) query = query.lt("fecha_hora_inicio", rangeEndISO);
   if (rangeEndISO) query = query.gt("fecha_hora_fin", rangeStartISO);
 
@@ -243,8 +266,12 @@ export async function checkConflictos({
     getHorarioById(startHorarioId),
     getHorarioById(endHorarioId),
   ]);
-  const startISO = toCaracasISO(dateYYYYMMDD, horaInicio);
-  const endISO = toCaracasISO(dateYYYYMMDD, horaFin);
+
+  // Convierte a UTC y obtiene ISO string
+  const startUTC = getUTCDateTime(dateYYYYMMDD, horaInicio);
+  const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
+  const startISO_UTC = startUTC.toISOString();
+  const endISO_UTC = endUTC.toISOString();
 
   // Construir OR dinámico por recurso
   const ors = [];
@@ -257,8 +284,8 @@ export async function checkConflictos({
   let query = supabase
     .from("reservas")
     .select("id, id_equipo, id_laptop, id_extension")
-    .lt("fecha_hora_inicio", endISO)
-    .gt("fecha_hora_fin", startISO)
+    .lt("fecha_hora_inicio", endISO_UTC) // Compara con UTC
+    .gt("fecha_hora_fin", startISO_UTC) // Compara con UTC
     .in("estado", ESTADOS_BLOQUEAN)
     .or(ors.join(","));
 
@@ -268,6 +295,7 @@ export async function checkConflictos({
   return { conflicto, choques: data || [] };
 }
 
+// Crea la reserva usando UTC
 export async function createReserva({
   dateYYYYMMDD,
   startHorarioId,
@@ -284,14 +312,19 @@ export async function createReserva({
     getHorarioById(startHorarioId),
     getHorarioById(endHorarioId),
   ]);
-  const startISO = toCaracasISO(dateYYYYMMDD, horaInicio);
-  const endISO = toCaracasISO(dateYYYYMMDD, horaFin);
 
-  if (endISO <= startISO) {
+  // Convierte a UTC y obtiene ISO string
+  const startUTC = getUTCDateTime(dateYYYYMMDD, horaInicio);
+  const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
+  const startISO_UTC = startUTC.toISOString();
+  const endISO_UTC = endUTC.toISOString();
+
+  if (endUTC <= startUTC) {
+    // Compara en UTC
     throw new Error("La hora de fin debe ser mayor a la de inicio");
   }
 
-  // Verificar conflictos
+  // Verificar conflictos (checkConflictos ya usa UTC internamente)
   const { conflicto } = await checkConflictos({
     dateYYYYMMDD,
     startHorarioId,
@@ -304,6 +337,7 @@ export async function createReserva({
     throw new Error("Conflicto de horario con algún recurso seleccionado");
   }
 
+  // INSERTA USANDO UTC ISO String
   const { error } = await supabase.from("reservas").insert(
     [
       {
@@ -313,8 +347,8 @@ export async function createReserva({
         id_extension,
         id_decanato,
         aula,
-        fecha_hora_inicio: startISO,
-        fecha_hora_fin: endISO,
+        fecha_hora_inicio: startISO_UTC, // <-- UTC
+        fecha_hora_fin: endISO_UTC, // <-- UTC
         estado,
       },
     ],
@@ -323,8 +357,8 @@ export async function createReserva({
   if (error) throw error;
 }
 
+// Cancelar reserva (Sin cambios, ya que compara fechas ISO)
 export async function cancelReserva({ reservaId }) {
-  // Validar ventana de cancelación: antes de la hora de fin
   const { data, error } = await supabase
     .from("reservas")
     .select("fecha_hora_fin, estado")
@@ -333,8 +367,9 @@ export async function cancelReserva({ reservaId }) {
   if (error) throw error;
   const fin = data?.fecha_hora_fin;
   if (!fin) throw new Error("Reserva no encontrada");
-  const ahora = new Date();
+  const ahora = new Date(); // Hora actual UTC
   if (new Date(fin) <= ahora) {
+    // Compara UTC con UTC
     throw new Error("No se puede cancelar una reserva finalizada");
   }
 
@@ -345,7 +380,7 @@ export async function cancelReserva({ reservaId }) {
   if (upErr) throw upErr;
 }
 
-// Para calendario del profesor
+// Para calendario del profesor (Sin cambios, ya que compara fechas ISO)
 export async function listMisReservasEnRango({ rangeStartISO, rangeEndISO }) {
   const userId = await getUserId();
   let query = supabase
@@ -354,8 +389,8 @@ export async function listMisReservasEnRango({ rangeStartISO, rangeEndISO }) {
       "id, id_equipo, fecha_hora_inicio, fecha_hora_fin, estado, aula, id_decanato"
     )
     .eq("id_usuario", userId)
-    .lt("fecha_hora_inicio", rangeEndISO)
-    .gt("fecha_hora_fin", rangeStartISO)
+    .lt("fecha_hora_inicio", rangeEndISO) // Compara UTC ISO
+    .gt("fecha_hora_fin", rangeStartISO) // Compara UTC ISO
     .order("fecha_hora_inicio", { ascending: true });
   const { data, error } = await query;
   if (error) throw error;

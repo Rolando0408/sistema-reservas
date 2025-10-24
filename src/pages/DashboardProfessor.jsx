@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import "./DashboardProfessor.css";
+import "./DashboardProfessor.css"; // Se mantiene para el layout general del dashboard
 import {
   ESTADOS_RESERVA,
   getHorarios,
@@ -9,17 +9,41 @@ import {
   getLaptops,
   getExtensiones,
   listMisReservas,
-  listMisReservasEnRango,
   listEquiposDisponibles,
   listLaptopsDisponibles,
   listExtensionesDisponibles,
   createReserva,
   cancelReserva,
-  toCaracasISO,
 } from "../lib/reservas";
-import supabase from "../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
-import Modal from "../components/Modal";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format, startOfDay, isToday } from "date-fns"; // 'parse' ya no es necesario aquí
+import { es } from "date-fns/locale";
 import ReservationsTable from "../components/ReservationsTable";
 
 export default function DashboardProfessor() {
@@ -29,28 +53,27 @@ export default function DashboardProfessor() {
   const [horarios, setHorarios] = useState([]);
   const [decanatos, setDecanatos] = useState([]);
 
-  // Form crear reserva
-  const [fecha, setFecha] = useState(""); // YYYY-MM-DD
-  const [horaInicioId, setHoraInicioId] = useState(null);
-  const [horaFinId, setHoraFinId] = useState(null);
-  // Tipo de conexión requerido (obligatorio): 'HDMI' | 'VGA'
+  // Form crear reserva (Estado ajustado a strings para Select)
+  const [fecha, setFecha] = useState(); // Objeto Date
+  const [horaInicioId, setHoraInicioId] = useState("");
+  const [horaFinId, setHoraFinId] = useState("");
   const [connectionType, setConnectionType] = useState("");
-  const [equipoId, setEquipoId] = useState(null);
-  const [laptopId, setLaptopId] = useState(null);
-  const [extensionId, setExtensionId] = useState(null);
-  const [decanatoId, setDecanatoId] = useState(null);
+  const [equipoId, setEquipoId] = useState("");
+  const [laptopId, setLaptopId] = useState("none"); // Usa 'none' para opcional
+  const [extensionId, setExtensionId] = useState("none");
+  const [decanatoId, setDecanatoId] = useState("none");
   const [aula, setAula] = useState("");
 
   const [equiposDisponibles, setEquiposDisponibles] = useState([]);
   const [laptopsDisponibles, setLaptopsDisponibles] = useState([]);
   const [extensionesDisponibles, setExtensionesDisponibles] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-  // Mapas para mostrar nombres en la tabla
+
   const [mapEquipos, setMapEquipos] = useState({});
   const [mapLaptops, setMapLaptops] = useState({});
   const [mapExtensiones, setMapExtensiones] = useState({});
 
-  // Guard de ruta: requiere sesión y rol profesor (id_rol_fk === 2)
+  // Guard de ruta (Sin cambios)
   useEffect(() => {
     const guard = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -70,9 +93,9 @@ export default function DashboardProfessor() {
       }
     };
     guard();
-  }, []);
+  }, [navigate]);
 
-  // Cargar catálogos y mis reservas
+  // Cargar catálogos y mis reservas (Sin cambios significativos)
   useEffect(() => {
     const load = async () => {
       try {
@@ -88,7 +111,7 @@ export default function DashboardProfessor() {
         setHorarios(hs);
         setDecanatos(decs);
         setReservas(mis);
-        // construir mapas id->nombre
+        // Construir mapas (lógica reducida para concisión, se asume correcta)
         setMapEquipos(
           (eqsAll || []).reduce((acc, it) => {
             acc[it.id] = {
@@ -121,48 +144,181 @@ export default function DashboardProfessor() {
     load();
   }, []);
 
-  // Actualizar recursos disponibles cuando cambian fecha/horas o filtros
+  // Actualizar recursos disponibles (FIX: Formateo de fecha y conversión de ID)
   useEffect(() => {
     const refreshDisponibles = async () => {
       try {
-        if (!fecha || !horaInicioId || !horaFinId || !connectionType) return;
+        // --- VALIDACIÓN Y PREPARACIÓN ---
+        if (!fecha || !horaInicioId || !horaFinId || !connectionType) {
+          setEquiposDisponibles([]);
+          setLaptopsDisponibles([]);
+          setExtensionesDisponibles([]);
+          return;
+        }
+
+        const fechaFormateada = format(fecha, "yyyy-MM-dd"); // ✅ Convierte Date a "YYYY-MM-DD"
+        const inicioIdNum = Number(horaInicioId); // ✅ Convierte string a number
+        const finIdNum = Number(horaFinId); // ✅ Convierte string a number
         const needHdmi = connectionType === "HDMI";
         const needVga = connectionType === "VGA";
+
+        // --- LLAMADAS A LA API CON DATOS CORRECTOS ---
         const [eqs, laps, exts] = await Promise.all([
           listEquiposDisponibles({
-            dateYYYYMMDD: fecha,
-            startHorarioId: horaInicioId,
-            endHorarioId: horaFinId,
+            dateYYYYMMDD: fechaFormateada,
+            startHorarioId: inicioIdNum,
+            endHorarioId: finIdNum,
             requireHdmi: needHdmi,
             requireVga: needVga,
           }),
           listLaptopsDisponibles({
-            dateYYYYMMDD: fecha,
-            startHorarioId: horaInicioId,
-            endHorarioId: horaFinId,
+            dateYYYYMMDD: fechaFormateada,
+            startHorarioId: inicioIdNum,
+            endHorarioId: finIdNum,
           }),
           listExtensionesDisponibles({
-            dateYYYYMMDD: fecha,
-            startHorarioId: horaInicioId,
-            endHorarioId: horaFinId,
+            dateYYYYMMDD: fechaFormateada,
+            startHorarioId: inicioIdNum,
+            endHorarioId: finIdNum,
           }),
         ]);
-        setEquiposDisponibles(eqs);
-        setLaptopsDisponibles(laps);
-        // Extensiones eléctricas no dependen del tipo de conexión de video
+
+        setEquiposDisponibles(eqs || []);
+        setLaptopsDisponibles(laps || []);
         setExtensionesDisponibles(exts || []);
-        // Reset selección si ya no está disponible
-        if (equipoId && !eqs.find((e) => e.id === equipoId)) setEquipoId(null);
-        if (laptopId && !laps.find((l) => l.id === laptopId)) setLaptopId(null);
-        if (extensionId && !(exts || []).find((x) => x.id === extensionId))
-          setExtensionId(null);
+
+        // --- RESET DE SELECCIÓN (Ajustado a strings y 'none') ---
+        const equipoIdActualNum = equipoId ? Number(equipoId) : null;
+        if (
+          equipoIdActualNum &&
+          !(eqs || []).find((e) => e.id === equipoIdActualNum)
+        ) {
+          setEquipoId("");
+        }
+        const laptopIdActualNum =
+          laptopId && laptopId !== "none" ? Number(laptopId) : null;
+        if (
+          laptopIdActualNum &&
+          !(laps || []).find((l) => l.id === laptopIdActualNum)
+        ) {
+          setLaptopId("none");
+        }
+        const extensionIdActualNum =
+          extensionId && extensionId !== "none" ? Number(extensionId) : null;
+        if (
+          extensionIdActualNum &&
+          !(exts || []).find((x) => x.id === extensionIdActualNum)
+        ) {
+          setExtensionId("none");
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Error al refrescar disponibles:", err);
+        setEquiposDisponibles([]);
+        setLaptopsDisponibles([]);
+        setExtensionesDisponibles([]);
+        Swal.fire(
+          "Error",
+          "No se pudieron cargar los equipos disponibles: " + err.message,
+          "error"
+        );
       }
     };
-    refreshDisponibles();
-  }, [fecha, horaInicioId, horaFinId, connectionType]);
 
+    refreshDisponibles();
+  }, [
+    fecha,
+    horaInicioId,
+    horaFinId,
+    connectionType,
+    equipoId,
+    laptopId,
+    extensionId,
+  ]);
+
+  // --- LÓGICA DEL FILTRO DE HORARIOS PASADOS ---
+  const getAvailableHorariosParaSelect = () => {
+    if (!fecha || !isToday(fecha)) {
+      return horarios;
+    }
+
+    const ahora = new Date();
+
+    return horarios.filter((h) => {
+      const timeString = h.hora;
+      const [hStr, mStr] = timeString.split(":"); // Solo necesitamos hora y minuto
+      const horarioHoy = new Date();
+
+      // Seteamos la hora y minuto del horario en el objeto Date de hoy
+      horarioHoy.setHours(parseInt(hStr, 10), parseInt(mStr, 10), 0, 0); // Forzamos segundos/milisegundos a 0
+
+      // Compara si la hora del horario es estrictamente posterior a la hora actual
+      return horarioHoy > ahora;
+    });
+  };
+  const horariosFiltrados = getAvailableHorariosParaSelect();
+
+  const getHorariosNoPasados = () => {
+    if (!fecha || !isToday(fecha)) {
+      return horarios; // Muestra todos si no hay fecha o no es hoy
+    }
+
+    const ahora = new Date();
+
+    return horarios.filter((h) => {
+      const timeString = h.hora;
+      const [hStr, mStr] = timeString.split(":");
+      const horarioHoy = new Date();
+
+      // Seteamos la hora y minuto del horario en el objeto Date de hoy
+      horarioHoy.setHours(parseInt(hStr, 10), parseInt(mStr, 10), 0, 0);
+      horarioHoy.setSeconds(0);
+      horarioHoy.setMilliseconds(0);
+
+      return horarioHoy > ahora; // Compara si la hora es posterior a la hora actual
+    });
+  };
+
+  // 1. Horarios para el SELECT DE INICIO (Filtrado de horas pasadas HOY)
+  const horariosInicioFiltrados = getHorariosNoPasados();
+
+  // 2. Horarios para el SELECT DE FIN (Filtrado después de la hora de inicio)
+const getHorariosFinFiltrados = () => {
+  const listaBase = horariosInicioFiltrados;
+
+  if (!horaInicioId) {
+    return listaBase;
+  }
+
+  // 1. Encuentra el objeto horario de la hora de inicio seleccionada
+  const horarioInicioSeleccionado = horarios.find(
+    (h) => String(h.id) === horaInicioId
+  );
+
+  if (!horarioInicioSeleccionado) {
+    return listaBase;
+  }
+
+  // 2. Obtiene el string de la hora de inicio (ej: "10:20:00")
+  const horaInicioString = horarioInicioSeleccionado.hora;
+
+  // 3. Filtra la lista base para devolver solo los elementos cuya hora es estrictamente mayor (>)
+  //    Esto funciona porque los strings "HH:mm:ss" se comparan alfabéticamente
+  return listaBase.filter((h) => h.hora > horaInicioString);
+};
+
+const horariosFinFiltrados = getHorariosFinFiltrados();
+
+  useEffect(() => {
+    if (
+      horaFinId &&
+      !horariosFinFiltrados.find((h) => String(h.id) === horaFinId)
+    ) {
+      // La hora de fin seleccionada ya no está disponible en la lista filtrada
+      setHoraFinId("");
+    }
+  }, [horaInicioId, horariosFinFiltrados, horaFinId]);
+
+  // Función onCreate (FIX: Cierre del Modal solo en éxito)
   const onCreate = async () => {
     try {
       if (
@@ -177,31 +333,40 @@ export default function DashboardProfessor() {
           "Selecciona fecha, horas, tipo de conexión y equipo",
           "warning"
         );
-        return;
+        return; // Sale sin intentar crear
       }
+
+      // La conversión de IDs a Number se hace en createReserva
       await createReserva({
-        dateYYYYMMDD: fecha,
-        startHorarioId: horaInicioId,
-        endHorarioId: horaFinId,
-        id_equipo: equipoId,
-        id_laptop: laptopId,
-        id_extension: extensionId,
-        id_decanato: decanatoId,
+        dateYYYYMMDD: format(fecha, "yyyy-MM-dd"), // ✅ Convierte Date a String
+        startHorarioId: Number(horaInicioId),
+        endHorarioId: Number(horaFinId),
+        id_equipo: Number(equipoId),
+        id_laptop: laptopId && laptopId !== "none" ? Number(laptopId) : null,
+        id_extension:
+          extensionId && extensionId !== "none" ? Number(extensionId) : null,
+        id_decanato:
+          decanatoId && decanatoId !== "none" ? Number(decanatoId) : null,
         aula,
       });
+
       Swal.fire(
         "Reserva creada",
         "Tu reservación fue creada con éxito",
         "success"
       );
+
       const mis = await listMisReservas({ futuras: true });
       setReservas(mis);
+      setOpenModal(false); // ✅ Cierra el modal solo en caso de éxito
     } catch (err) {
+      // Si hay error, el modal se mantiene abierto
       Swal.fire("Error", err.message || "No se pudo crear la reserva", "error");
     }
   };
 
   const onCancel = async (id) => {
+    // ... (Tu función onCancel, se asume correcta) ...
     try {
       await cancelReserva({ reservaId: id });
       Swal.fire("Cancelada", "La reserva fue cancelada", "success");
@@ -217,6 +382,7 @@ export default function DashboardProfessor() {
   };
 
   const onSignOut = async () => {
+    // ... (Tu función onSignOut, se asume correcta) ...
     try {
       const result = await Swal.fire({
         title: "¿Cerrar sesión?",
@@ -245,13 +411,6 @@ export default function DashboardProfessor() {
     }
   };
 
-  const formatHora = (iso) =>
-    new Date(iso).toLocaleTimeString("es-VE", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  const formatFecha = (iso) => new Date(iso).toLocaleDateString("es-VE");
-
   return (
     <div className="prof-dashboard">
       <div className="DashboardHeader">
@@ -261,148 +420,223 @@ export default function DashboardProfessor() {
           Cerrar sesión
         </button>
       </div>
-      {/* Botón de crear se mostrará al lado del título de Reservas más abajo */}
+      {/* Modal para crear reserva */}
+      <Dialog open={openModal} onOpenChange={setOpenModal}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Nueva Reservación</DialogTitle>
+            <DialogDescription>
+              Completa todos los campos para crear tu reserva.
+            </DialogDescription>
+          </DialogHeader>
 
-      <Modal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        title="Nueva Reservación"
-        footer={
-          <>
-            <button onClick={() => setOpenModal(false)}>Cancelar</button>
-            <button
+          <div className="grid grid-cols-2 gap-6 py-4">
+            {/* --- FILA DE FECHA --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="fecha" className="text-right">
+                Fecha
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={`col-span-3 justify-start text-left font-normal ${
+                      !fecha && "text-muted-foreground"
+                    }`}
+                  >
+                    <CalendarIcon className="h-4 w-4 mr-2" />{" "}
+                    {/* Ajuste de icono */}
+                    {fecha ? (
+                      format(fecha, "PP", { locale: es })
+                    ) : (
+                      <span>Selecciona una fecha</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={fecha}
+                    onSelect={setFecha}
+                    initialFocus
+                    disabled={{ before: startOfDay(new Date()) }} // ✅ Evita fechas pasadas
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            {/* --- FILA DE INICIO --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="hora-inicio" className="text-right">
+                Inicio
+              </Label>
+              <Select value={horaInicioId} onValueChange={setHoraInicioId}>
+                <SelectTrigger
+                  id="hora-inicio"
+                  className="col-span-3 text-black"
+                >
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {horariosFiltrados.map((h) => (
+                    <SelectItem key={h.id} value={String(h.id)}>
+                      {h.descripcion}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* --- FILA DE FIN --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="hora-fin" className="text-right">
+                Fin
+              </Label>
+              <Select value={horaFinId} onValueChange={setHoraFinId}>
+                <SelectTrigger id="hora-fin" className="col-span-3">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {horariosFinFiltrados.map((h) => (
+                      <SelectItem key={h.id} value={String(h.id)}>
+                        {h.descripcion}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* --- FILA DE CONEXIÓN --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="conexion" className="text-right">
+                Conexión
+              </Label>
+              <Select value={connectionType} onValueChange={setConnectionType}>
+                <SelectTrigger id="conexion" className="col-span-3">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HDMI">HDMI</SelectItem>
+                  <SelectItem value="VGA">VGA</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* --- FILA DE EQUIPO --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="equipo" className="text-right">
+                Equipo
+              </Label>
+              <Select value={equipoId} onValueChange={setEquipoId}>
+                <SelectTrigger id="equipo" className="col-span-3">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {equiposDisponibles.map((e) => (
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.nombre_equipo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* --- FILA DE LAPTOP --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="laptop" className="text-right">
+                Laptop
+              </Label>
+              <Select value={laptopId} onValueChange={setLaptopId}>
+                <SelectTrigger id="laptop" className="col-span-3">
+                  <SelectValue placeholder="Ninguna" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Opcional</SelectItem>
+                  {laptopsDisponibles.map((l) => (
+                    <SelectItem key={l.id} value={String(l.id)}>
+                      {l.nombre_laptop}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* --- FILA DE EXTENSIÓN --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="extension" className="text-right">
+                Extensión
+              </Label>
+              <Select value={extensionId} onValueChange={setExtensionId}>
+                <SelectTrigger id="extension" className="col-span-3">
+                  <SelectValue placeholder="Ninguna" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Opcional</SelectItem>
+                  {extensionesDisponibles.map((x) => (
+                    <SelectItem key={x.id} value={String(x.id)}>
+                      {x.nombre_extension}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* --- FILA DE DECANATO --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="decanato" className="text-right">
+                Decanato
+              </Label>
+              <Select value={decanatoId} onValueChange={setDecanatoId}>
+                <SelectTrigger id="decanato" className="col-span-3">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {decanatos.map((d) => (
+                    <SelectItem key={d.id} value={String(d.id)}>
+                      {d.nombre_decanato}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* --- FILA DE AULA --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="aula" className="text-right">
+                Aula
+              </Label>
+              <Input
+                id="aula"
+                type="text"
+                value={aula}
+                onChange={(e) => setAula(e.target.value)}
+                placeholder="Ej: Aula 101"
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          {/* Fin del contenido del formulario */}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenModal(false)}>
+              Cancelar
+            </Button>
+            <Button
               onClick={async () => {
                 await onCreate();
-                setOpenModal(false);
+                // Esta lógica se mantiene aquí y el cierre ocurre en caso de éxito
+                // o en caso de que el usuario lo haga manualmente
               }}
             >
               Crear Reservación
-            </button>
-          </>
-        }
-      >
-        <div className="form-row">
-          <label>Fecha</label>
-          <input
-            type="date"
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-          />
-        </div>
-        <div className="form-row">
-          <label>Inicio</label>
-          <select
-            value={horaInicioId || ""}
-            onChange={(e) => setHoraInicioId(Number(e.target.value) || null)}
-          >
-            <option value="">Seleccione</option>
-            {horarios.map((h) => (
-              <option key={h.id} value={h.id}>
-                {h.descripcion}
-              </option>
-            ))}
-          </select>
-          <label>Fin</label>
-          <select
-            value={horaFinId || ""}
-            onChange={(e) => setHoraFinId(Number(e.target.value) || null)}
-          >
-            <option value="">Seleccione</option>
-            {horarios.map((h) => (
-              <option key={h.id} value={h.id}>
-                {h.descripcion}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label>Tipo de conexión</label>
-          <select
-            value={connectionType}
-            onChange={(e) => setConnectionType(e.target.value)}
-          >
-            <option value="">Seleccione</option>
-            <option value="HDMI">HDMI</option>
-            <option value="VGA">VGA</option>
-          </select>
-        </div>
-        <div className="form-row">
-          <label>Equipo</label>
-          <select
-            value={equipoId || ""}
-            onChange={(e) => setEquipoId(Number(e.target.value) || null)}
-          >
-            <option value="">Seleccione</option>
-            {equiposDisponibles.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre_equipo}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label>Laptop (opcional)</label>
-          <select
-            value={laptopId || ""}
-            onChange={(e) => setLaptopId(Number(e.target.value) || null)}
-          >
-            <option value="">Ninguna</option>
-            {laptopsDisponibles.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.nombre_laptop}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label>Extensión (opcional)</label>
-          <select
-            value={extensionId || ""}
-            onChange={(e) => setExtensionId(Number(e.target.value) || null)}
-          >
-            <option value="">Ninguna</option>
-            {extensionesDisponibles.map((x) => (
-              <option key={x.id} value={x.id}>
-                {x.nombre_extension}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label>Decanato</label>
-          <select
-            value={decanatoId || ""}
-            onChange={(e) => setDecanatoId(Number(e.target.value) || null)}
-          >
-            <option value="">Seleccione</option>
-            {decanatos.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nombre_decanato}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label>Aula</label>
-          <input
-            type="text"
-            value={aula}
-            onChange={(e) => setAula(e.target.value)}
-            placeholder="Ej: Aula 101"
-          />
-        </div>
-      </Modal>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Listado de reservas y encabezado con botón */}
       <div className="lista-reservas">
         <div className="reservas-header">
           <h2 className="titleReservas">Reservas</h2>
-          <button
+          <Button
             className="btnCreateReserva"
             onClick={() => setOpenModal(true)}
           >
             + Crear Reservación
-          </button>
+          </Button>
         </div>
         {reservas.length === 0 ? (
           <p>No tienes reservas futuras.</p>

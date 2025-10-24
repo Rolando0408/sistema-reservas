@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import supabase from "../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import "./Login.css";
 import "./Register.css";
 import logo from "../assets/logo-3.png";
