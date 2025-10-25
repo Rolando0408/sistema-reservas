@@ -3,7 +3,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import "./index.css"; // ✅ Importa el CSS de Tailwind/shadcn
-
+import "@fontsource/montserrat/400.css";
+import "@fontsource/montserrat/500.css";
+import "@fontsource/montserrat/700.css";
+import "@fontsource/montserrat/900.css";
 import { AuthProvider } from "./lib/AuthContext.jsx"; // ✅ Importa el gestor de sesión
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";

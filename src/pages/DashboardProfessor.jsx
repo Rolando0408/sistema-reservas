@@ -430,7 +430,7 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
   return (
     <div className="prof-dashboard">
       <div className="DashboardHeader">
-        <h1 className="titleDash">Mis Reservaciones</h1>
+        <h1 className="titleDash text-white font-bold text-3xl">Mis Reservaciones</h1>
         {loading && <p>Cargando...</p>}
         <button className="btnLogOut" onClick={onSignOut}>
           Cerrar sesión
@@ -443,7 +443,7 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
           console.log("onOpenChange disparado. isOpen:", isOpen);
           setOpenModal(isOpen);
           if (!isOpen) {resetFormulario();}}}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nueva Reservación</DialogTitle>
             <DialogDescription>
@@ -488,7 +488,7 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
             {/* --- FILA DE INICIO --- */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="hora-inicio" className="text-right">
-                Inicio
+                Hora Inicio
               </Label>
               <Select value={horaInicioId} onValueChange={setHoraInicioId}>
                 <SelectTrigger
@@ -509,7 +509,7 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
             {/* --- FILA DE FIN --- */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="hora-fin" className="text-right">
-                Fin
+                Hora Fin
               </Label>
               <Select value={horaFinId} onValueChange={setHoraFinId}>
                 <SelectTrigger id="hora-fin" className="col-span-3">
@@ -631,14 +631,17 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
           {/* Fin del contenido del formulario */}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenModal(false)}>
+            <Button variant="outline" onClick={() =>{
+              resetFormulario();
+              setOpenModal(false);
+            }}>
               Cancelar
             </Button>
             <Button
               onClick={async () => {
                 await onCreate();
-                // Esta lógica se mantiene aquí y el cierre ocurre en caso de éxito
-                // o en caso de que el usuario lo haga manualmente
+                resetFormulario();
+                setOpenModal(false);
               }}
             >
               Crear Reservación

@@ -102,16 +102,6 @@ input {
   background-color: #3a3a5c;
 }
 
-.loginLogo {
-  text-align: center;
-  padding: 20px;
-  padding-top: 40%;
-  img {
-    max-width: 80%;
-    height: auto;
-  }
-}
-
 .pRegister {
   margin-top: 20px;
 }

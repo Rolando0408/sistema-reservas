@@ -72,14 +72,14 @@ export default function Login() {
 
   return (
     <div className="loginContainer">
-      <div className="loginSidebar">
+      <div className="loginSidebar flex content-center items-center">
         <div className="loginLogo">
-          <img src={logo} alt="Logo" />
+          <img src={logo} alt="Logo" className="p-10"/>
         </div>
       </div>
       <div className="loginMain">
-        <h1>UNIMAR PROYECTA</h1>
-        <p>Bienvenido! Inicia sesión para continuar</p>
+        <h1 className="font-bold">UNIMAR PROYECTA</h1>
+        <p className="mb-3">Bienvenido! Inicia sesión para continuar</p>
 
         <form onSubmit={handleLogin} className="loginForm">
           <div className="formGroup">

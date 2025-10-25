@@ -275,7 +275,7 @@ export default function ReservationsTable({
   });
 
   return (
-    <div className="reservations-table">
+    <div className="reservations-table text-sm">
       <div className="table-controls">
         <div className="pagination-controls">
           <button
