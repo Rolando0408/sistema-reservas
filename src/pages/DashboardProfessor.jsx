@@ -42,9 +42,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format, startOfDay, isToday } from "date-fns"; // 'parse' ya no es necesario aquí
+import { format, startOfDay, isToday, set } from "date-fns"; // 'parse' ya no es necesario aquí
 import { es } from "date-fns/locale";
 import ReservationsTable from "../components/ReservationsTable";
+import { Loader2 } from "lucide-react";
 
 export default function DashboardProfessor() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ export default function DashboardProfessor() {
   const [reservas, setReservas] = useState([]);
   const [horarios, setHorarios] = useState([]);
   const [decanatos, setDecanatos] = useState([]);
+  const [reservasLoading, setReservasLoading] = useState(true);
 
   // Form crear reserva (Estado ajustado a strings para Select)
   const [fecha, setFecha] = useState(); // Objeto Date
@@ -100,6 +102,8 @@ export default function DashboardProfessor() {
     const load = async () => {
       try {
         setLoading(true);
+        setReservasLoading(true);
+        
         const [hs, decs, mis, eqsAll, lapsAll, extsAll] = await Promise.all([
           getHorarios(),
           getDecanatos(),
@@ -137,8 +141,11 @@ export default function DashboardProfessor() {
       } catch (err) {
         console.error(err);
         Swal.fire("Error", err.message || "No se pudo cargar datos", "error");
+        setReservas([]);
+        setReservasLoading(false);
       } finally {
         setLoading(false);
+        if (reservasLoading) setReservasLoading(false);
       }
     };
     load();
@@ -398,11 +405,6 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
 
       setLoading(true);
       await supabase.auth.signOut();
-      await Swal.fire(
-        "Sesión cerrada",
-        "Has cerrado sesión correctamente.",
-        "success"
-      );
       navigate("/");
     } catch (err) {
       Swal.fire("Error", err.message || "No se pudo cerrar sesión", "error");
@@ -430,19 +432,23 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
   return (
     <div className="prof-dashboard">
       <div className="DashboardHeader">
-        <h1 className="titleDash text-white font-bold text-3xl">Mis Reservaciones</h1>
-        {loading && <p>Cargando...</p>}
+        <h1 className="titleDash text-white font-bold text-3xl">
+          Mis Reservaciones
+        </h1>
         <button className="btnLogOut" onClick={onSignOut}>
           Cerrar sesión
         </button>
       </div>
-      {/* Modal para crear reserva */}
       <Dialog
         open={openModal}
         onOpenChange={(isOpen) => {
           console.log("onOpenChange disparado. isOpen:", isOpen);
           setOpenModal(isOpen);
-          if (!isOpen) {resetFormulario();}}}>
+          if (!isOpen) {
+            resetFormulario();
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nueva Reservación</DialogTitle>
@@ -631,10 +637,13 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
           {/* Fin del contenido del formulario */}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() =>{
-              resetFormulario();
-              setOpenModal(false);
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resetFormulario();
+                setOpenModal(false);
+              }}
+            >
               Cancelar
             </Button>
             <Button
@@ -661,9 +670,19 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
             + Crear Reservación
           </Button>
         </div>
-        {reservas.length === 0 ? (
+
+        {/* 👇 LÓGICA CONDICIONAL ACTUALIZADA 👇 */}
+        {reservasLoading ? (
+          // 1. Si está cargando, muestra el spinner
+          <div className="flex items-center justify-center p-4">
+            <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+            <span>Cargando reservas...</span>
+          </div>
+        ) : reservas.length === 0 ? (
+          // 2. Si NO está cargando Y no hay reservas, muestra el mensaje
           <p>No tienes reservas futuras.</p>
         ) : (
+          // 3. Si NO está cargando Y SÍ hay reservas, muestra la tabla
           <ReservationsTable
             data={reservas}
             onCancel={(id) => onCancel(id)}

@@ -11,6 +11,7 @@ import {
   AiOutlineEyeInvisible,
 } from "react-icons/ai";
 import Swal from "sweetalert2";
+import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -46,7 +47,8 @@ export default function Login() {
         title: "¡Bienvenido!",
         text: "Has iniciado sesión correctamente",
         icon: "success",
-        confirmButtonText: "Continuar",
+        showConfirmButton: false,
+        timer: 1500,
       });
 
       if (perfil?.id_rol_fk === 2) {
@@ -120,13 +122,14 @@ export default function Login() {
             </div>
           </div>
           <button type="submit" className="loginButton" disabled={loading}>
-            <span>{loading ? "Iniciando..." : "Iniciar Sesión"}</span>
+            <span className="flex content-center">{loading ? (<><Loader2 className="animate-spin" /> <span className="pl-1">Iniciando...</span></>) 
+            : ("Iniciar Sesión")}</span>
             <AiOutlineArrowRight />
           </button>
         </form>
 
         <p className="pRegister">
-          ¿No estás registrado? <Link to="/register">Regístrate aquí</Link>
+          ¿No estás registrado? <Link to="/register" className="hover:text-purple-700 text-blue-500 hover:underline underline-offset-4">Regístrate aquí</Link>
         </p>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
   AiOutlineEyeInvisible,
 } from "react-icons/ai";
 import Swal from "sweetalert2";
+import { Loader2 } from "lucide-react";
 
 export default function Register() {
   const [fullName, setFullName] = useState("");
@@ -175,7 +176,7 @@ export default function Register() {
           </div>
 
           <button type="submit" className="loginButton" disabled={loading}>
-            <span>{loading ? "Creando..." : "Crear cuenta"}</span>
+            <span className="flex content-center">{loading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> <span>Creando...</span></>) : ("Crear cuenta")}</span>
             <AiOutlineArrowRight />
           </button>
         </form>
