@@ -48,7 +48,6 @@ export default function Register() {
       if (error) throw error;
 
       // --- PASO 2: MOSTRAR MENSAJE DE VERIFICACIÓN ---
-      // Asumiendo que SIEMPRE tendrás la confirmación de email activada
       await Swal.fire({
         title: "Verifica tu correo",
         text: "Te hemos enviado un enlace de confirmación. Abre tu correo y confirma tu cuenta para poder iniciar sesión.",
@@ -56,11 +55,8 @@ export default function Register() {
         confirmButtonText: "Entendido",
       });
 
-      // Opcional: Limpiar formulario o redirigir al login
-      // setEmail(''); setPassword(''); setConfirmPassword(''); setFullName('');
       window.location.href = "/"; // Redirige al login
     } catch (error) {
-      // --- MANEJO DE ERRORES (Tu código actual es bueno) ---
       const msg = (error?.message || "").toLowerCase();
       if (
         msg.includes("already") ||

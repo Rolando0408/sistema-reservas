@@ -52,7 +52,7 @@ export default function Login() {
       });
 
       if (perfil?.id_rol_fk === 2) {
-        navigate("/dashboard");
+        navigate("/app/dashboard");
       } else {
         // Por ahora, los demás roles se quedan en login o redirige a otra vista si la tienes
         // navigate("/");

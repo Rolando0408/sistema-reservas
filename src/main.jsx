@@ -1,32 +1,62 @@
 // src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
-import "./index.css"; // ✅ Importa el CSS de Tailwind/shadcn
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
+import "./index.css";
 import "@fontsource/montserrat/400.css";
 import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
 import "@fontsource/montserrat/900.css";
-import { AuthProvider } from "./lib/AuthContext.jsx"; // ✅ Importa el gestor de sesión
-import Login from "./pages/Login.jsx";
-import Register from "./pages/Register.jsx";
-import DashboardProfesor from "./pages/DashboardProfessor.jsx";
-import ProtectedRoute from "./lib/ProtectedRoute.jsx";
+import { AuthProvider } from "@/lib/AuthContext.jsx"; // Using alias
+import Login from "@/pages/Login.jsx"; // Using alias
+import Register from "@/pages/Register.jsx"; // Using alias
+import DashboardProfessor from "@/pages/DashboardProfessor.jsx"; // Using alias
+import ProtectedRoute from "@/lib/ProtectedRoute.jsx"; // Using alias
+import ProfessorLayout from "@/layouts/ProfessorLayout.jsx"; // Using alias
 
-// Define las rutas de tu aplicación
 const router = createBrowserRouter([
+  // Public Routes
   { path: "/", element: <Login /> },
-  { path: "/register", element: <Register /> },
+  { path: "/register", element: <Register /> }, // Changed from /register for consistency
+
+  // Protected Routes under /app prefix
   {
-    path: "/dashboard",
-    element: <ProtectedRoute />, // Ruta protegida
+    path: "/app",
+    element: <ProtectedRoute />,
     children: [
-      { path: "", element: <DashboardProfesor /> }, // Dashboard del profesor
+      {
+        // Esta ruta hija coincide con /app y renderiza el layout
+        // Outlet en ProtectedRoute mostrará ProfessorLayout
+        path: "", // Coincide con /app
+        element: <ProfessorLayout />,
+        children: [
+          // Los hijos DEL LAYOUT
+          {
+            path: "dashboard", // Ruta completa: /app/dashboard
+            element: <DashboardProfessor />,
+          },
+          {
+            path: "historial", // Ruta completa: /app/historial
+            element: <div>Página de Historial</div>,
+          },
+          {
+            index: true,
+            element: <Navigate to="/app/dashboard" replace />,
+          },
+        ],
+      },
     ],
   },
+
+  // Auth Callback Route
   {
-    path: "/auth/callback", // La ruta que Supabase usa
-    element: <Navigate to="/dashboard" replace />, // Redirige al dashboard
+    path: "/auth/callback",
+    // Redirects to the protected dashboard after auth
+    element: <Navigate to="/app/dashboard" replace />, // <-- Changed redirect path
   },
 ]);
 
@@ -34,9 +64,7 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
-      {" "}
-      {/* ✅ Envuelve con el proveedor de autenticación */}
-      <RouterProvider router={router} /> {/* ✅ Usa el router */}
+      <RouterProvider router={router} />
     </AuthProvider>
   </React.StrictMode>
 );
