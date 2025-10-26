@@ -572,7 +572,6 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
                   />
                 )}
 
-                {/* 👇 Mensaje condicional (se mantiene igual) 👇 */}
                 {!requisitosCompletos && warningTarget === "equipo" && (
                   <p className="text-xs text-red-500 mt-1">
                     Selecciona fecha, horas y conexión.
@@ -730,7 +729,7 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
       {/* Listado de reservas y encabezado con botón */}
       <div className="lista-reservas">
         <div className="reservas-header">
-          <h2 className="titleReservas">Reservas</h2>
+          <h2 className="titleReservas font-bold text-lg">Mis reservas</h2>
           <Button
             className="btnCreateReserva bg-[#0D4D98]"
             onClick={() => setOpenModal(true)}

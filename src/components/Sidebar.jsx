@@ -40,7 +40,7 @@ export default function Sidebar({ isCollapsed}) {
 
   return (
     <aside
-      className={`  bg-[#0D4D98] text-white flex flex-col transition-all duration-500 ease-in-out shadow-inner ${
+      className={` z-10 shadow-sidebar-light bg-[#0D4D98] text-white flex flex-col transition-all duration-500 ease-in-out${
         isCollapsed ? "w-16 px-2 py-4" : "w-63.5 p-4"
       }`}
     >

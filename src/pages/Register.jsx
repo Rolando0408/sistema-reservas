@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
-import "./Login.css";
-import "./Register.css";
 import logo from "../assets/logo-3.png";
 import {
   AiOutlineUser,
@@ -28,7 +26,12 @@ export default function Register() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      await Swal.fire(/* ... Contraseñas no coinciden ... */);
+      await Swal.fire({
+        title: "Contraseñas no coinciden",
+        text: "Verifica que ambas contraseñas sean iguales.",
+        icon: "warning",
+        confirmButtonText: "Entendido",
+      });
       return;
     }
 
@@ -83,104 +86,150 @@ export default function Register() {
   };
 
   return (
-    <div className="loginContainer">
-      <div className="loginSidebar flex content-center items-center bg-[#0D4D98]">
-        <div className="loginLogo">
-          <img src={logo} alt="Logo" className="p-10"/>
+    <div className="relative min-h-screen w-screen bg-[#0D4D98] md:flex md:min-h-screen md:bg-white">
+      {/* Sidebar en pantallas md+ */}
+      <aside className="hidden md:flex md:w-[30%] bg-[#0D4D98] items-center justify-center">
+        <img src={logo} alt="Logo" className="p-10 max-w-[85%] h-auto" />
+      </aside>
+
+      {/* Contenido principal */}
+      <main className="relative z-10 min-h-screen flex-1 flex flex-col items-center justify-center px-4">
+        {/* Logo arriba de la tarjeta en móvil */}
+        <img
+          src={logo}
+          alt="Logo"
+          className="md:hidden mb-[4rem] w-40 h-auto drop-shadow"
+        />
+
+        {/* Tarjeta */}
+        <div className="w-[calc(100%-32px)] max-w-[380px] rounded-2xl p-6 text-center text-white backdrop-blur-md bg-white/15 border border-white/30 shadow-xl mx-auto md:static md:w-auto md:max-w-none md:text-black md:bg-transparent md:backdrop-blur-0 md:border-0 md:shadow-none md:p-12">
+          <h1 className="font-bold text-white md:text-[#0D4D98] text-3xl md:text-[50px] leading-tight">
+            UNIMAR PROYECTA
+          </h1>
+          <p className="mb-3 mt-0 text-white md:text-black">
+            ¡Crea tu cuenta para continuar!
+          </p>
+
+          <form
+            onSubmit={handleRegister}
+            className="flex flex-col items-start gap-5 w-full md:w-[300px] mx-auto"
+          >
+            {/* Nombre completo */}
+            <div className="w-full">
+              <div className="relative flex items-center gap-2 w-full h-14">
+                <AiOutlineUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="fullName"
+                  type="text"
+                  placeholder="Nombre completo"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="rounded-md pl-10 pr-10 w-full h-full bg-white text-black border border-gray-500 outline-none placeholder:text-gray-500"
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="w-full">
+              <div className="relative flex items-center gap-2 w-full h-14">
+                <AiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="rounded-md pl-10 pr-10 w-full h-full bg-white text-black border border-gray-500 outline-none placeholder:text-gray-500"
+                />
+              </div>
+            </div>
+
+            {/* Contraseña */}
+            <div className="w-full">
+              <div className="relative flex items-center gap-2 w-full h-14">
+                <AiOutlineLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pl-10 pr-10 w-full h-full bg-white text-black border border-gray-500 rounded-md outline-none placeholder:text-gray-500"
+                />
+                {showPassword ? (
+                  <AiOutlineEyeInvisible
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
+                    onClick={() => setShowPassword(false)}
+                  />
+                ) : (
+                  <AiOutlineEye
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
+                    onClick={() => setShowPassword(true)}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Confirmar contraseña */}
+            <div className="w-full">
+              <div className="relative flex items-center gap-2 w-full h-14">
+                <AiOutlineLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirmar contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="pl-10 pr-10 w-full h-full bg-white text-black border border-gray-500 rounded-md outline-none placeholder:text-gray-500"
+                />
+                {showConfirmPassword ? (
+                  <AiOutlineEyeInvisible
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
+                    onClick={() => setShowConfirmPassword(false)}
+                  />
+                ) : (
+                  <AiOutlineEye
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
+                    onClick={() => setShowConfirmPassword(true)}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="bg-[#0D4D98] text-white rounded-md h-12 w-full flex items-center justify-between px-4 hover:bg-[#0b4282] disabled:opacity-50"
+              disabled={loading}
+            >
+              <span className="flex items-center">
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    <span className="pl-1">Creando...</span>
+                  </>
+                ) : (
+                  "Crear cuenta"
+                )}
+              </span>
+              <AiOutlineArrowRight />
+            </button>
+          </form>
+
+          <p className="mt-3 text-white md:text-black">
+            ¿Ya tienes cuenta? {""}
+            <Link
+              to="/"
+              className="hover:text-purple-700 text-blue-300 md:text-blue-500 hover:underline underline-offset-4"
+            >
+              Inicia sesión
+            </Link>
+          </p>
         </div>
-      </div>
-      <div className="loginMain">
-        <h1 className="font-bold text-[#0D4D98]">UNIMAR PROYECTA</h1>
-        <p className="mb-4 mt-[-0.75rem]">¡Crea tu cuenta para continuar!</p>
-
-        <form onSubmit={handleRegister} className="loginForm">
-          <div className="formGroup">
-            <div className="inputWithIcon">
-              <AiOutlineUser className="icon" />
-              <input
-                id="fullName"
-                type="text"
-                placeholder="Nombre completo"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="formGroup">
-            <div className="inputWithIcon">
-              <AiOutlineMail className="icon" />
-              <input
-                id="email"
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="formGroup">
-            <div className="inputWithIcon">
-              <AiOutlineLock className="icon" />
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              {showPassword ? (
-                <AiOutlineEyeInvisible
-                  className="iconRight"
-                  onClick={() => setShowPassword(false)}
-                />
-              ) : (
-                <AiOutlineEye
-                  className="iconRight"
-                  onClick={() => setShowPassword(true)}
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="formGroup">
-            <div className="inputWithIcon">
-              <AiOutlineLock className="icon" />
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirmar contraseña"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-              {showConfirmPassword ? (
-                <AiOutlineEyeInvisible
-                  className="iconRight"
-                  onClick={() => setShowConfirmPassword(false)}
-                />
-              ) : (
-                <AiOutlineEye
-                  className="iconRight"
-                  onClick={() => setShowConfirmPassword(true)}
-                />
-              )}
-            </div>
-          </div>
-
-          <button type="submit" className="loginButton mb-0 bg-[#0D4D98]" disabled={loading}>
-            <span className="flex content-center">{loading ? (<><Loader2 className="animate-spin" /> <span>Creando...</span></>) : ("Crear cuenta")}</span>
-            <AiOutlineArrowRight />
-          </button>
-        </form>
-
-        <p className="pRegister mt-3">
-          ¿Ya tienes cuenta? <Link to="/" className="hover:text-purple-700 text-blue-500 hover:underline underline-offset-4">Inicia sesión</Link>
-        </p>
-      </div>
+      </main>
     </div>
   );
 }

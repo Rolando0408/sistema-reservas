@@ -90,7 +90,7 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       boxShadow: {
-        "sidebar-light": "5px 0px 10px -3px rgba(0, 0, 0, 0.1)",
+        "sidebar-light": '10px 0px 15px 0px rgba(0, 0, 0, 0.2)',
       },
     },
   },
