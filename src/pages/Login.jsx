@@ -74,14 +74,14 @@ export default function Login() {
 
   return (
     <div className="loginContainer">
-      <div className="loginSidebar flex content-center items-center">
+      <div className="loginSidebar flex content-center items-center bg-[#0D4D98]">
         <div className="loginLogo">
           <img src={logo} alt="Logo" className="p-10"/>
         </div>
       </div>
       <div className="loginMain">
-        <h1 className="font-bold">UNIMAR PROYECTA</h1>
-        <p className="mb-3">Bienvenido! Inicia sesión para continuar</p>
+        <h1 className="font-bold text-[#0D4D98]">UNIMAR PROYECTA</h1>
+        <p className="mb-3 mt-[-0.75rem]">Bienvenido! Inicia sesión para continuar</p>
 
         <form onSubmit={handleLogin} className="loginForm">
           <div className="formGroup">
@@ -121,14 +121,14 @@ export default function Login() {
               )}
             </div>
           </div>
-          <button type="submit" className="loginButton" disabled={loading}>
+          <button type="submit" className="loginButton bg-[#0D4D98]" disabled={loading}>
             <span className="flex content-center">{loading ? (<><Loader2 className="animate-spin" /> <span className="pl-1">Iniciando...</span></>) 
             : ("Iniciar Sesión")}</span>
             <AiOutlineArrowRight />
           </button>
         </form>
 
-        <p className="pRegister">
+        <p className="pRegister mt-3">
           ¿No estás registrado? <Link to="/register" className="hover:text-purple-700 text-blue-500 hover:underline underline-offset-4">Regístrate aquí</Link>
         </p>
       </div>

@@ -7,7 +7,6 @@
 }
 
 .loginSidebar {
-  background-color: #24243e;
   width: 30%;
 }
 
@@ -86,7 +85,6 @@ input {
 }
 
 .loginButton {
-  background-color: #24243e;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -100,8 +98,4 @@ input {
 
 .loginButton:hover {
   background-color: #3a3a5c;
-}
-
-.pRegister {
-  margin-top: 20px;
 }

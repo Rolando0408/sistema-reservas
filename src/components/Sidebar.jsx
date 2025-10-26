@@ -1,23 +1,47 @@
 // src/components/Sidebar.jsx
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Home,
   History,
-  PanelLeftClose,
-  PanelLeftOpen,
   LogOut,
 } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
+import Swal from "sweetalert2";
+import logo from "../assets/logo-3.png";
+import logo2 from "../assets/logo-4.png";
 
-export default function Sidebar({ isCollapsed, toggleSidebar }) {
+export default function Sidebar({ isCollapsed}) {
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
+  const navigate = useNavigate();
+
+    const onSignOut = async () => {
+      try {
+        const result = await Swal.fire({
+          title: "¿Cerrar sesión?",
+          text: "Se cerrará tu sesión actual.",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "Sí, cerrar sesión",
+          cancelButtonText: "Cancelar",
+          reverseButtons: true,
+          focusCancel: true,
+        });
+        if (!result.isConfirmed) return;
+        await supabase.auth.signOut();
+        navigate("/");
+      } catch (err) {
+        Swal.fire("Error", err.message || "No se pudo cerrar sesión", "error");
+      } finally {
+      }
+    };
 
   return (
     <aside
-      className={` bg-[#24243e] text-white flex flex-col transition-all duration-300 ease-in-out ${
-        isCollapsed ? "w-16 px-2 py-4" : "w-64 p-4"
+      className={`  bg-[#0D4D98] text-white flex flex-col transition-all duration-500 ease-in-out shadow-inner ${
+        isCollapsed ? "w-16 px-2 py-4" : "w-63.5 p-4"
       }`}
     >
       {/* --- ENCABEZADO MODIFICADO --- */}
@@ -26,25 +50,13 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
           isCollapsed ? "justify-center" : "justify-between"
         }`}
       >
-        {" "}
-        {/* ✅ Usa justify-between si no está colapsado */}
-        {/* Logo (opcional) */}
-        {/* <img src={logo} alt="Logo" className={`h-10 w-auto ${isCollapsed ? '' : 'mr-2'}`} /> */}
-        {/* Título (solo si no está colapsado) */}
-        {!isCollapsed && <h2 className="text-xl font-bold">UNIMAR Proyecta</h2>}
-        <Button
-          variant="ghost"
-          size="icon" // Hace el botón más pequeño, solo icono
-          className="h-8 w-8" // Tamaño específico para el botón de icono
-          onClick={toggleSidebar}
-          title={isCollapsed ? "Expandir" : "Minimizar"}
-        >
-          {isCollapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
-        </Button>
+        {isCollapsed ? (
+          // Muestra logo simple si está colapsado
+          <img src={logo} alt="UNIMAR" className="h-8 w-auto transition-all duration-500 ease-in-out" /> // Ajusta tamaño h-8
+        ) : (
+          // Muestra logo largo si está expandido
+          <img src={logo2} alt="UNIMAR Proyecta" className="h-12 w-auto transition-all duration-500 ease-in-out" /> // Ajusta tamaño h-10
+        )}
       </div>
       {/* --- FIN ENCABEZADO MODIFICADO --- */}
 
@@ -78,9 +90,21 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
           </Link>
         </Button>
       </nav>
-
-      {/* ⛔️ El div mt-auto ahora está vacío o lo puedes borrar */}
-      <div className="mt-auto">{/* El botón de toggle ya no está aquí */}</div>
+      <div className="mt-auto">
+        <Button
+          variant="ghost" // Mismo 'variant' que los otros botones
+          className={`w-full ${
+            isCollapsed ? "justify-center" : "justify-start"
+          }`} // Mismo ajuste de justificación
+          onClick={onSignOut}
+          title="Cerrar Sesión"
+        >
+          <LogOut className={`h-4 w-4 ${!isCollapsed && "mr-2"}`} />{" "}
+          {/* Icono LogOut */}
+          {!isCollapsed && <span>Cerrar Sesión</span>}{" "}
+          {/* Muestra/oculta texto */}
+        </Button>
+      </div>
     </aside>
   );
 }

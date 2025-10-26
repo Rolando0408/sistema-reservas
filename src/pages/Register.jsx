@@ -84,14 +84,14 @@ export default function Register() {
 
   return (
     <div className="loginContainer">
-      <div className="loginSidebar">
+      <div className="loginSidebar flex content-center items-center bg-[#0D4D98]">
         <div className="loginLogo">
-          <img src={logo} alt="Logo" />
+          <img src={logo} alt="Logo" className="p-10"/>
         </div>
       </div>
       <div className="loginMain">
-        <h1>UNIMAR PROYECTA</h1>
-        <p>¡Crea tu cuenta para continuar!</p>
+        <h1 className="font-bold text-[#0D4D98]">UNIMAR PROYECTA</h1>
+        <p className="mb-4 mt-[-0.75rem]">¡Crea tu cuenta para continuar!</p>
 
         <form onSubmit={handleRegister} className="loginForm">
           <div className="formGroup">
@@ -171,14 +171,14 @@ export default function Register() {
             </div>
           </div>
 
-          <button type="submit" className="loginButton" disabled={loading}>
-            <span className="flex content-center">{loading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> <span>Creando...</span></>) : ("Crear cuenta")}</span>
+          <button type="submit" className="loginButton mb-0 bg-[#0D4D98]" disabled={loading}>
+            <span className="flex content-center">{loading ? (<><Loader2 className="animate-spin" /> <span>Creando...</span></>) : ("Crear cuenta")}</span>
             <AiOutlineArrowRight />
           </button>
         </form>
 
-        <p className="pRegister">
-          ¿Ya tienes cuenta? <Link to="/">Inicia sesión</Link>
+        <p className="pRegister mt-3">
+          ¿Ya tienes cuenta? <Link to="/" className="hover:text-purple-700 text-blue-500 hover:underline underline-offset-4">Inicia sesión</Link>
         </p>
       </div>
     </div>

@@ -6,15 +6,6 @@ body {
   color: black;
 }
 
-.DashboardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  background-color: #24243e;
-  padding: 12px 20px;
-}
-
 .btnLogOut {
   background-color: #ffff;
   color: #0a0a0a;
@@ -36,7 +27,7 @@ body {
 
 .lista-reservas {
   margin: 20px auto;
-  width: 80%;
+  width: 90%;
 }
 
 /* Alinear el contenedor de DataTables con el header */
@@ -57,7 +48,6 @@ body {
 }
 
 .btnCreateReserva {
-  background-color: #24243e;
   color: #fff;
   border: none;
   padding: 8px 12px;
