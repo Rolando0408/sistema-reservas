@@ -17,6 +17,7 @@ import Register from "@/pages/Register.jsx"; // Using alias
 import DashboardProfessor from "@/pages/DashboardProfessor.jsx"; // Using alias
 import ProtectedRoute from "@/lib/ProtectedRoute.jsx"; // Using alias
 import ProfessorLayout from "@/layouts/ProfessorLayout.jsx"; // Using alias
+import HistorialReservas from "@/pages/HistorialReservas.jsx"; // Using alias
 
 const router = createBrowserRouter([
   // Public Routes
@@ -41,7 +42,7 @@ const router = createBrowserRouter([
           },
           {
             path: "historial", // Ruta completa: /app/historial
-            element: <div>Página de Historial</div>,
+            element: <HistorialReservas />,
           },
           {
             index: true,

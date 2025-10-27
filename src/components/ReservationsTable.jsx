@@ -15,6 +15,7 @@ export default function ReservationsTable({
   data = [],
   onCancel,
   equipmentMaps = {},
+  showCancelButton = true,
 }) {
   const [globalFilter, setGlobalFilter] = useState("");
   const headerClass = (id) => {
@@ -245,7 +246,7 @@ export default function ReservationsTable({
             if (!result.isConfirmed) return;
             if (typeof onCancel === "function") onCancel(id);
           };
-          return (
+          return showCancelButton ? (
             <button
               className="dt-icon-btn dt-icon-btn--danger"
               onClick={handleClick}
@@ -264,11 +265,11 @@ export default function ReservationsTable({
                 <path d="M9 3h6a1 1 0 0 1 1 1v2h4v2h-1v11a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8H4V6h4V4a1 1 0 0 1 1-1Zm1 3h4V5h-4v1Zm-3 2v11a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8H7Zm3 2h2v7h-2v-7Zm4 0h2v7h-2v-7Z" />
               </svg>
             </button>
-          );
+          ) : null;
         },
       },
     ],
-    [equipmentMaps]
+    [equipmentMaps, showCancelButton, onCancel]
   );
 
   const table = useReactTable({
@@ -448,6 +449,7 @@ export default function ReservationsTable({
                     {pills}
                   </div>
                 ) : null}
+                {showCancelButton ? (
                 <div className="mt-3 flex justify-end">
                   <button
                     className="dt-icon-btn dt-icon-btn--danger"
@@ -482,6 +484,7 @@ export default function ReservationsTable({
                     </svg>
                   </button>
                 </div>
+                ): null}
               </div>
             );
           })

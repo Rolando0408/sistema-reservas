@@ -440,7 +440,7 @@ export default function DashboardProfessor() {
             <DialogDescription>
               Completa todos los campos para crear tu reserva.
             </DialogDescription>
-          </DialogHeader>
+          </DialogHeader> 
 
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
