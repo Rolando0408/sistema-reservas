@@ -101,16 +101,14 @@ export default function Sidebar({ isCollapsed }) {
       <div className="mt-auto">
         <Button
           variant="ghost" // Mismo 'variant' que los otros botones
-          className={`w-full ${
+          className={`w-full mb-2 ${
             isCollapsed ? "justify-center" : "justify-start"
           }`} // Mismo ajuste de justificación
           onClick={onSignOut}
           title="Cerrar Sesión"
         >
           <LogOut className={`h-4 w-4 ${!isCollapsed && "mr-2"}`} />{" "}
-          {/* Icono LogOut */}
           {!isCollapsed && <span>Cerrar Sesión</span>}{" "}
-          {/* Muestra/oculta texto */}
         </Button>
       </div>
     </aside>
