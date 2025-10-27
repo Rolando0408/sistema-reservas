@@ -86,14 +86,14 @@ export default function Register() {
   };
 
   return (
-    <div className="relative min-h-screen w-screen bg-[#0D4D98] md:flex md:min-h-screen md:bg-white">
+    <div className="relative min-h-screen w-100% bg-[#0D4D98] md:flex md:min-h-screen md:bg-white">
       {/* Sidebar en pantallas md+ */}
       <aside className="hidden md:flex md:w-[30%] bg-[#0D4D98] items-center justify-center">
         <img src={logo} alt="Logo" className="p-10 max-w-[85%] h-auto" />
       </aside>
 
       {/* Contenido principal */}
-      <main className="relative z-10 min-h-screen flex-1 flex flex-col items-center justify-center px-4">
+      <main className="relative z-10 min-h-screen flex-1 flex flex-col items-center justify-center">
         {/* Logo arriba de la tarjeta en móvil */}
         <img
           src={logo}
@@ -102,7 +102,7 @@ export default function Register() {
         />
 
         {/* Tarjeta */}
-        <div className="w-[calc(100%-32px)] max-w-[380px] rounded-2xl p-6 text-center text-white backdrop-blur-md bg-white/15 border border-white/30 shadow-xl mx-auto md:static md:w-auto md:max-w-none md:text-black md:bg-transparent md:backdrop-blur-0 md:border-0 md:shadow-none md:p-12">
+        <div className="w-[calc(100%-32px)] max-w-[380px] rounded-2xl p-6 text-center text-white backdrop-blur-md bg-white/15 border border-white/30 shadow-xl mx-auto md:static md:w-100% md:max-w-none md:text-black md:bg-transparent md:backdrop-blur-0 md:border-0 md:shadow-none md:p-12 md:m-0">
           <h1 className="font-bold text-white md:text-[#0D4D98] text-3xl md:text-[50px] leading-tight">
             UNIMAR PROYECTA
           </h1>

@@ -74,7 +74,7 @@ export default function DashboardProfessor() {
   const [mapEquipos, setMapEquipos] = useState({});
   const [mapLaptops, setMapLaptops] = useState({});
   const [mapExtensiones, setMapExtensiones] = useState({});
-const [warningTarget, setWarningTarget] = useState(null);
+  const [warningTarget, setWarningTarget] = useState(null);
 
   // Guard de ruta (Sin cambios)
   useEffect(() => {
@@ -104,7 +104,7 @@ const [warningTarget, setWarningTarget] = useState(null);
       try {
         setLoading(true);
         setReservasLoading(true);
-        
+
         const [hs, decs, mis, eqsAll, lapsAll, extsAll] = await Promise.all([
           getHorarios(),
           getDecanatos(),
@@ -290,31 +290,31 @@ const [warningTarget, setWarningTarget] = useState(null);
   const horariosInicioFiltrados = getHorariosNoPasados();
 
   // 2. Horarios para el SELECT DE FIN (Filtrado después de la hora de inicio)
-const getHorariosFinFiltrados = () => {
-  const listaBase = horariosInicioFiltrados;
+  const getHorariosFinFiltrados = () => {
+    const listaBase = horariosInicioFiltrados;
 
-  if (!horaInicioId) {
-    return listaBase;
-  }
+    if (!horaInicioId) {
+      return listaBase;
+    }
 
-  // 1. Encuentra el objeto horario de la hora de inicio seleccionada
-  const horarioInicioSeleccionado = horarios.find(
-    (h) => String(h.id) === horaInicioId
-  );
+    // 1. Encuentra el objeto horario de la hora de inicio seleccionada
+    const horarioInicioSeleccionado = horarios.find(
+      (h) => String(h.id) === horaInicioId
+    );
 
-  if (!horarioInicioSeleccionado) {
-    return listaBase;
-  }
+    if (!horarioInicioSeleccionado) {
+      return listaBase;
+    }
 
-  // 2. Obtiene el string de la hora de inicio (ej: "10:20:00")
-  const horaInicioString = horarioInicioSeleccionado.hora;
+    // 2. Obtiene el string de la hora de inicio (ej: "10:20:00")
+    const horaInicioString = horarioInicioSeleccionado.hora;
 
-  // 3. Filtra la lista base para devolver solo los elementos cuya hora es estrictamente mayor (>)
-  //    Esto funciona porque los strings "HH:mm:ss" se comparan alfabéticamente
-  return listaBase.filter((h) => h.hora > horaInicioString);
-};
+    // 3. Filtra la lista base para devolver solo los elementos cuya hora es estrictamente mayor (>)
+    //    Esto funciona porque los strings "HH:mm:ss" se comparan alfabéticamente
+    return listaBase.filter((h) => h.hora > horaInicioString);
+  };
 
-const horariosFinFiltrados = getHorariosFinFiltrados();
+  const horariosFinFiltrados = getHorariosFinFiltrados();
 
   useEffect(() => {
     if (
@@ -389,38 +389,38 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
     }
   };
 
-      const resetFormulario = () => {
-        console.log("INTENTANDO LIMPIAR FORMULARIO...");
-        setFecha(undefined);
-        setHoraInicioId("");
-        setHoraFinId("");
-        setConnectionType("");
-        setEquipoId("");
-        setLaptopId("none");
-        setExtensionId("none");
-        setDecanatoId("none");
-        setAula("");
-        setEquiposDisponibles([]);
-        setLaptopsDisponibles([]);
-        setExtensionesDisponibles([]);
-      };
+  const resetFormulario = () => {
+    console.log("INTENTANDO LIMPIAR FORMULARIO...");
+    setFecha(undefined);
+    setHoraInicioId("");
+    setHoraFinId("");
+    setConnectionType("");
+    setEquipoId("");
+    setLaptopId("none");
+    setExtensionId("none");
+    setDecanatoId("none");
+    setAula("");
+    setEquiposDisponibles([]);
+    setLaptopsDisponibles([]);
+    setExtensionesDisponibles([]);
+  };
 
-      const requisitosCompletos =
-        fecha && horaInicioId && horaFinId && connectionType;
+  const requisitosCompletos =
+    fecha && horaInicioId && horaFinId && connectionType;
 
-      const handleDisabledClick = (targetName) => {
-        // Si los requisitos NO están completos, muestra el aviso
-        if (!requisitosCompletos) {
-          setWarningTarget(targetName);
-          // Opcional: Ocultar el aviso después de unos segundos
-          setTimeout(() => {
-            setWarningTarget(null);
-          }, 3000); // Se oculta después de 3 segundos
-        } else {
-          // Si los requisitos SÍ están completos (aunque no debería llamarse aquí), oculta el aviso
-          setWarningTarget(null);
-        }
-      };
+  const handleDisabledClick = (targetName) => {
+    // Si los requisitos NO están completos, muestra el aviso
+    if (!requisitosCompletos) {
+      setWarningTarget(targetName);
+      // Opcional: Ocultar el aviso después de unos segundos
+      setTimeout(() => {
+        setWarningTarget(null);
+      }, 3000); // Se oculta después de 3 segundos
+    } else {
+      // Si los requisitos SÍ están completos (aunque no debería llamarse aquí), oculta el aviso
+      setWarningTarget(null);
+    }
+  };
 
   return (
     <div className="prof-dashboard">
@@ -434,275 +434,307 @@ const horariosFinFiltrados = getHorariosFinFiltrados();
           }
         }}
       >
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="p-0 h-[100dvh] w-full rounded-none sm:h-auto sm:w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl sm:rounded-lg sm:p-6 flex flex-col">
+          <DialogHeader className="sticky top-0 z-10 border-b px-4 py-3 sm:px-6 sm:py-4">
             <DialogTitle>Nueva Reservación</DialogTitle>
             <DialogDescription>
               Completa todos los campos para crear tu reserva.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-6 py-4">
-            {/* --- FILA DE FECHA --- */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="fecha" className="text-right">
-                Fecha
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={`col-span-3 justify-start text-left font-normal ${
-                      !fecha && "text-muted-foreground"
-                    }`}
+          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* --- FILA DE FECHA --- */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                <Label htmlFor="fecha" className="text-left sm:text-right">
+                  Fecha
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={`col-span-1 sm:col-span-3 justify-start text-left font-normal ${
+                        !fecha && "text-muted-foreground"
+                      }`}
+                    >
+                      <CalendarIcon className="h-4 w-4 mr-2" />{" "}
+                      {/* Ajuste de icono */}
+                      {fecha ? (
+                        format(fecha, "PP", { locale: es })
+                      ) : (
+                        <span>Selecciona una fecha</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={fecha}
+                      onSelect={setFecha}
+                      initialFocus
+                      disabled={{ before: startOfDay(new Date()) }}
+                      className={""}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              {/* --- FILA DE INICIO --- */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                <Label
+                  htmlFor="hora-inicio"
+                  className="text-left sm:text-right"
+                >
+                  Hora Inicio
+                </Label>
+                <Select value={horaInicioId} onValueChange={setHoraInicioId}>
+                  <SelectTrigger
+                    id="hora-inicio"
+                    className="col-span-1 sm:col-span-3 text-black"
                   >
-                    <CalendarIcon className="h-4 w-4 mr-2" />{" "}
-                    {/* Ajuste de icono */}
-                    {fecha ? (
-                      format(fecha, "PP", { locale: es })
-                    ) : (
-                      <span>Selecciona una fecha</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={fecha}
-                    onSelect={setFecha}
-                    initialFocus
-                    disabled={{ before: startOfDay(new Date()) }}
-                    className={""}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            {/* --- FILA DE INICIO --- */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="hora-inicio" className="text-right">
-                Hora Inicio
-              </Label>
-              <Select value={horaInicioId} onValueChange={setHoraInicioId}>
-                <SelectTrigger
-                  id="hora-inicio"
-                  className="col-span-3 text-black"
-                >
-                  <SelectValue placeholder="Seleccione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {horariosFiltrados.map((h) => (
-                    <SelectItem key={h.id} value={String(h.id)}>
-                      {h.descripcion}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* --- FILA DE FIN --- */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="hora-fin" className="text-right">
-                Hora Fin
-              </Label>
-              <Select value={horaFinId} onValueChange={setHoraFinId}>
-                <SelectTrigger id="hora-fin" className="col-span-3">
-                  <SelectValue placeholder="Seleccione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {horariosFinFiltrados.map((h) => (
-                    <SelectItem key={h.id} value={String(h.id)}>
-                      {h.descripcion}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* --- FILA DE CONEXIÓN --- */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="conexion" className="text-right">
-                Tipo de Conexión
-              </Label>
-              <Select value={connectionType} onValueChange={setConnectionType}>
-                <SelectTrigger id="conexion" className="col-span-3">
-                  <SelectValue placeholder="Seleccione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="HDMI">HDMI</SelectItem>
-                  <SelectItem value="VGA">VGA</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* --- FILA DE EQUIPO --- */}
-            <div
-              className="grid grid-cols-4 items-center gap-4"
-              onClick={() => handleDisabledClick("equipo")}
-            >
-              <Label htmlFor="equipo" className="text-right">
-                Proyector
-              </Label>
-              <div className="col-span-3 relative">
-                <Select
-                  value={equipoId}
-                  onValueChange={setEquipoId}
-                  disabled={!requisitosCompletos}
-                >
-                  <SelectTrigger id="equipo" className="col-span-3">
                     <SelectValue placeholder="Seleccione" />
                   </SelectTrigger>
                   <SelectContent>
-                    {equiposDisponibles.length === 0 ? (
-                      // Si no hay equipos, muestra este mensaje
-                      <div className="px-4 py-2 text-sm text-muted-foreground">
-                        No hay equipos disponibles para este horario/conexión.
-                      </div>
-                    ) : (
-                      // Si SÍ hay equipos, muestra las opciones
-                      equiposDisponibles.map((e) => (
-                        <SelectItem key={e.id} value={String(e.id)}>
-                          {e.nombre_equipo}
-                        </SelectItem>
-                      ))
-                    )}
+                    {horariosFiltrados.map((h) => (
+                      <SelectItem key={h.id} value={String(h.id)}>
+                        {h.descripcion}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                {!requisitosCompletos && (
-                  <div
-                    className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
-                    onClick={() => handleDisabledClick("equipo")} // Llama a la función al hacer clic en la trampa
-                    title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
-                  />
-                )}
+              </div>
+              {/* --- FILA DE FIN --- */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                <Label htmlFor="hora-fin" className="text-left sm:text-right">
+                  Hora Fin
+                </Label>
+                <Select value={horaFinId} onValueChange={setHoraFinId}>
+                  <SelectTrigger
+                    id="hora-fin"
+                    className="col-span-1 sm:col-span-3"
+                  >
+                    <SelectValue placeholder="Seleccione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {horariosFinFiltrados.map((h) => (
+                      <SelectItem key={h.id} value={String(h.id)}>
+                        {h.descripcion}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* --- FILA DE CONEXIÓN --- */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                <Label htmlFor="conexion" className="text-left sm:text-right">
+                  Tipo de Conexión
+                </Label>
+                <Select
+                  value={connectionType}
+                  onValueChange={setConnectionType}
+                >
+                  <SelectTrigger
+                    id="conexion"
+                    className="col-span-1 sm:col-span-3"
+                  >
+                    <SelectValue placeholder="Seleccione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="HDMI">HDMI</SelectItem>
+                    <SelectItem value="VGA">VGA</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* --- FILA DE EQUIPO --- */}
+              <div
+                className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
+                onClick={() => handleDisabledClick("equipo")}
+              >
+                <Label htmlFor="equipo" className="text-left sm:text-right">
+                  Proyector
+                </Label>
+                <div className="col-span-1 sm:col-span-3 relative">
+                  <Select
+                    value={equipoId}
+                    onValueChange={setEquipoId}
+                    disabled={!requisitosCompletos}
+                  >
+                    <SelectTrigger
+                      id="equipo"
+                      className="col-span-1 sm:col-span-3"
+                    >
+                      <SelectValue placeholder="Seleccione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {equiposDisponibles.length === 0 ? (
+                        // Si no hay equipos, muestra este mensaje
+                        <div className="px-4 py-2 text-sm text-muted-foreground">
+                          No hay equipos disponibles para este horario/conexión.
+                        </div>
+                      ) : (
+                        // Si SÍ hay equipos, muestra las opciones
+                        equiposDisponibles.map((e) => (
+                          <SelectItem key={e.id} value={String(e.id)}>
+                            {e.nombre_equipo}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {!requisitosCompletos && (
+                    <div
+                      className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
+                      onClick={() => handleDisabledClick("equipo")} // Llama a la función al hacer clic en la trampa
+                      title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
+                    />
+                  )}
 
-                {!requisitosCompletos && warningTarget === "equipo" && (
-                  <p className="text-xs text-red-500 mt-1">
-                    Selecciona fecha, horas y conexión.
-                  </p>
-                )}
-              </div>
-            </div>
-            {/* --- FILA DE LAPTOP --- */}
-            <div className="grid grid-cols-4 items-center gap-4" onClick={() => handleDisabledClick("laptop")}>
-              <Label htmlFor="laptop" className="text-right">
-                Laptop
-              </Label>
-              <div className="col-span-3 relative">
-              <Select
-                value={laptopId}
-                onValueChange={setLaptopId}
-                disabled={!requisitosCompletos}
-              >
-                <SelectTrigger id="laptop" className="col-span-3">
-                  <SelectValue placeholder="Ninguna" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Ninguna (Opcional)</SelectItem>
-                  {laptopsDisponibles.length === 0 ? (
-                    // Muestra mensaje si no hay laptops, además de la opción "Ninguna"
-                    <div className="px-4 py-2 text-sm text-muted-foreground">
-                      No hay laptops disponibles para este horario.
-                    </div>
-                  ) : (
-                    // Muestra las laptops disponibles
-                    laptopsDisponibles.map((l) => (
-                      <SelectItem key={l.id} value={String(l.id)}>
-                        {l.nombre_laptop}
-                      </SelectItem>
-                    ))
+                  {!requisitosCompletos && warningTarget === "equipo" && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Selecciona fecha, horas y conexión.
+                    </p>
                   )}
-                </SelectContent>
-              </Select>
-              {!requisitosCompletos && (
-                  <div
-                    className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
-                    onClick={() => handleDisabledClick("laptop")} // Llama a la función al hacer clic en la trampa
-                    title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
-                  />
-                )}
-                {!requisitosCompletos && warningTarget === "laptop" && (
-                  <p className="text-xs text-red-500 mt-1">
-                    Selecciona fecha, horas y conexión.
-                  </p>
-                )}
+                </div>
               </div>
-            </div>
-            {/* --- FILA DE EXTENSIÓN --- */}
-            <div className="grid grid-cols-4 items-center gap-4" onClick={() => handleDisabledClick("extension")}>
-              <Label htmlFor="extension" className="text-right">
-                Extensión
-              </Label>
-              <div className="col-span-3 relative">
-              <Select
-                value={extensionId}
-                onValueChange={setExtensionId}
-                disabled={!requisitosCompletos}
+              {/* --- FILA DE LAPTOP --- */}
+              <div
+                className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
+                onClick={() => handleDisabledClick("laptop")}
               >
-                <SelectTrigger id="extension" className="col-span-3">
-                  <SelectValue placeholder="Ninguna" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Ninguna (Opcional)</SelectItem>
-                  {extensionesDisponibles.length === 0 ? (
-                    <div className="px-4 py-2 text-sm text-muted-foreground">
-                      No hay extensiones disponibles para este horario.
-                    </div>
-                  ) : (
-                    extensionesDisponibles.map((x) => (
-                      <SelectItem key={x.id} value={String(x.id)}>
-                        {x.nombre_extension}
-                      </SelectItem>
-                    ))
+                <Label htmlFor="laptop" className="text-left sm:text-right">
+                  Laptop
+                </Label>
+                <div className="col-span-1 sm:col-span-3 relative">
+                  <Select
+                    value={laptopId}
+                    onValueChange={setLaptopId}
+                    disabled={!requisitosCompletos}
+                  >
+                    <SelectTrigger
+                      id="laptop"
+                      className="col-span-1 sm:col-span-3"
+                    >
+                      <SelectValue placeholder="Ninguna" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Ninguna (Opcional)</SelectItem>
+                      {laptopsDisponibles.length === 0 ? (
+                        // Muestra mensaje si no hay laptops, además de la opción "Ninguna"
+                        <div className="px-4 py-2 text-sm text-muted-foreground">
+                          No hay laptops disponibles para este horario.
+                        </div>
+                      ) : (
+                        // Muestra las laptops disponibles
+                        laptopsDisponibles.map((l) => (
+                          <SelectItem key={l.id} value={String(l.id)}>
+                            {l.nombre_laptop}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {!requisitosCompletos && (
+                    <div
+                      className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
+                      onClick={() => handleDisabledClick("laptop")} // Llama a la función al hacer clic en la trampa
+                      title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
+                    />
                   )}
-                </SelectContent>
-              </Select>
-              {!requisitosCompletos && (
-                  <div
-                    className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
-                    onClick={() => handleDisabledClick("extension")} // Llama a la función al hacer clic en la trampa
-                    title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
-                  />
-                )}
-                {!requisitosCompletos && warningTarget === "extension" && (
-                  <p className="text-xs text-red-500 mt-1">
-                    Selecciona fecha, horas y conexión.
-                  </p>
-                )}
+                  {!requisitosCompletos && warningTarget === "laptop" && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Selecciona fecha, horas y conexión.
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-            {/* --- FILA DE DECANATO --- */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="decanato" className="text-right">
-                Decanato
-              </Label>
-              <Select value={decanatoId} onValueChange={setDecanatoId}>
-                <SelectTrigger id="decanato" className="col-span-3">
-                  <SelectValue placeholder="Seleccione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {decanatos.map((d) => (
-                    <SelectItem key={d.id} value={String(d.id)}>
-                      {d.nombre_decanato}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* --- FILA DE AULA --- */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="aula" className="text-right">
-                Aula
-              </Label>
-              <Input
-                id="aula"
-                type="text"
-                value={aula}
-                onChange={(e) => setAula(e.target.value)}
-                placeholder="Ej: Aula 101"
-                className="col-span-3"
-              />
+              {/* --- FILA DE EXTENSIÓN --- */}
+              <div
+                className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
+                onClick={() => handleDisabledClick("extension")}
+              >
+                <Label htmlFor="extension" className="text-left sm:text-right">
+                  Extensión
+                </Label>
+                <div className="col-span-1 sm:col-span-3 relative">
+                  <Select
+                    value={extensionId}
+                    onValueChange={setExtensionId}
+                    disabled={!requisitosCompletos}
+                  >
+                    <SelectTrigger
+                      id="extension"
+                      className="col-span-1 sm:col-span-3"
+                    >
+                      <SelectValue placeholder="Ninguna" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Ninguna (Opcional)</SelectItem>
+                      {extensionesDisponibles.length === 0 ? (
+                        <div className="px-4 py-2 text-sm text-muted-foreground">
+                          No hay extensiones disponibles para este horario.
+                        </div>
+                      ) : (
+                        extensionesDisponibles.map((x) => (
+                          <SelectItem key={x.id} value={String(x.id)}>
+                            {x.nombre_extension}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {!requisitosCompletos && (
+                    <div
+                      className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
+                      onClick={() => handleDisabledClick("extension")} // Llama a la función al hacer clic en la trampa
+                      title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
+                    />
+                  )}
+                  {!requisitosCompletos && warningTarget === "extension" && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Selecciona fecha, horas y conexión.
+                    </p>
+                  )}
+                </div>
+              </div>
+              {/* --- FILA DE DECANATO --- */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                <Label htmlFor="decanato" className="text-left sm:text-right">
+                  Decanato
+                </Label>
+                <Select value={decanatoId} onValueChange={setDecanatoId}>
+                  <SelectTrigger
+                    id="decanato"
+                    className="col-span-1 sm:col-span-3"
+                  >
+                    <SelectValue placeholder="Seleccione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {decanatos.map((d) => (
+                      <SelectItem key={d.id} value={String(d.id)}>
+                        {d.nombre_decanato}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* --- FILA DE AULA --- */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                <Label htmlFor="aula" className="text-left sm:text-right">
+                  Aula
+                </Label>
+                <Input
+                  id="aula"
+                  type="text"
+                  value={aula}
+                  onChange={(e) => setAula(e.target.value)}
+                  placeholder="Ej: Aula 101"
+                  className="col-span-1 sm:col-span-3"
+                />
+              </div>
             </div>
           </div>
           {/* Fin del contenido del formulario */}
 
-          <DialogFooter>
+          <DialogFooter className="bottom-0 z-10 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 sm:px-6 sm:py-4">
             <Button
               variant="outline"
               onClick={() => {
