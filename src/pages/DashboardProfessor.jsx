@@ -54,6 +54,7 @@ export default function DashboardProfessor() {
   const [horarios, setHorarios] = useState([]);
   const [decanatos, setDecanatos] = useState([]);
   const [reservasLoading, setReservasLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Form crear reserva (Estado ajustado a strings para Select)
   const [fecha, setFecha] = useState(); // Objeto Date
@@ -70,6 +71,7 @@ export default function DashboardProfessor() {
   const [laptopsDisponibles, setLaptopsDisponibles] = useState([]);
   const [extensionesDisponibles, setExtensionesDisponibles] = useState([]);
   const [openModal, setOpenModal] = useState(false);
+  const [blockDialogClose, setBlockDialogClose] = useState(false);
 
   const [mapEquipos, setMapEquipos] = useState({});
   const [mapLaptops, setMapLaptops] = useState({});
@@ -326,22 +328,32 @@ export default function DashboardProfessor() {
     }
   }, [horaInicioId, horariosFinFiltrados, horaFinId]);
 
-  // Función onCreate (FIX: Cierre del Modal solo en éxito)
+  // Función onCreate con guard para evitar cierre del diálogo durante SweetAlert
   const onCreate = async () => {
+    setIsCreating(true);
     try {
-      if (
-        !fecha ||
-        !horaInicioId ||
-        !horaFinId ||
-        !equipoId ||
-        !connectionType
-      ) {
-        Swal.fire(
-          "Faltan datos",
-          "Selecciona fecha, horas, tipo de conexión y equipo",
-          "warning"
-        );
-        return; // Sale sin intentar crear
+      // Validación de campos requeridos
+      const missing = [];
+      if (!fecha) missing.push("fecha");
+      if (!horaInicioId) missing.push("hora de inicio");
+      if (!horaFinId) missing.push("hora de fin");
+      if (!connectionType) missing.push("tipo de conexión");
+      if (!equipoId) missing.push("proyector");
+      if (!decanatoId || decanatoId === "none") missing.push("decanato");
+      if (!aula || !aula.trim()) missing.push("aula");
+
+      if (missing.length > 0) {
+        setBlockDialogClose(true);
+        await Swal.fire({
+          title: "Faltan datos",
+          html: `Debes completar: <b>${missing.join(", ")}</b>.`,
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Entendido",
+        });
+        setTimeout(() => setBlockDialogClose(false), 120);
+        return false; // Sale sin intentar crear
       }
 
       // La conversión de IDs a Number se hace en createReserva
@@ -358,18 +370,31 @@ export default function DashboardProfessor() {
         aula,
       });
 
-      Swal.fire(
-        "Reserva creada",
-        "Tu reservación fue creada con éxito",
-        "success"
-      );
+      setBlockDialogClose(true);
+      await Swal.fire({
+        title: "Reserva creada",
+        text: "Tu reservación fue creada con éxito",
+        icon: "success",
+        allowOutsideClick: false,
+      });
+      setTimeout(() => setBlockDialogClose(false), 120);
 
       const mis = await listMisReservas({ futuras: true });
       setReservas(mis);
-      setOpenModal(false); // ✅ Cierra el modal solo en caso de éxito
+      return true; // Indica éxito para que el footer cierre el modal
     } catch (err) {
-      // Si hay error, el modal se mantiene abierto
-      Swal.fire("Error", err.message || "No se pudo crear la reserva", "error");
+      setBlockDialogClose(true);
+      await Swal.fire({
+        title: "Error",
+        text: err.message || "No se pudo crear la reserva",
+        icon: "error",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+      setTimeout(() => setBlockDialogClose(false), 120);
+      return false;
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -428,56 +453,39 @@ export default function DashboardProfessor() {
         open={openModal}
         onOpenChange={(isOpen) => {
           console.log("onOpenChange disparado. isOpen:", isOpen);
+          // Evita que el diálogo se cierre mientras se muestra un SweetAlert bloqueante
+          if (!isOpen && blockDialogClose) {
+            console.log("Cierre del diálogo bloqueado por alerta activa");
+            return;
+          }
           setOpenModal(isOpen);
           if (!isOpen) {
             resetFormulario();
           }
         }}
       >
-        <DialogContent className="p-0 h-[100dvh] w-full rounded-none sm:h-auto sm:w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl sm:rounded-lg sm:p-6 flex flex-col">
-          <DialogHeader className="sticky top-0 z-10 border-b px-4 py-3 sm:px-6 sm:py-4">
+        <DialogContent
+          onInteractOutside={(e) => {
+            if (blockDialogClose) {
+              e.preventDefault();
+            }
+          }}
+          onEscapeKeyDown={(e) => {
+            if (blockDialogClose) {
+              e.preventDefault();
+            }
+          }}
+          className="p-0 h-[100dvh] w-full rounded-none sm:h-auto sm:w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl sm:rounded-lg sm:p-6 flex flex-col"
+        >
+          <DialogHeader className="sticky top-0 border-b px-4 py-3 sm:px-6 sm:py-4">
             <DialogTitle>Nueva Reservación</DialogTitle>
             <DialogDescription>
               Completa todos los campos para crear tu reserva.
             </DialogDescription>
-          </DialogHeader> 
+          </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* --- FILA DE FECHA --- */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
-                <Label htmlFor="fecha" className="text-left sm:text-right">
-                  Fecha
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={`col-span-1 sm:col-span-3 justify-start text-left font-normal ${
-                        !fecha && "text-muted-foreground"
-                      }`}
-                    >
-                      <CalendarIcon className="h-4 w-4 mr-2" />{" "}
-                      {/* Ajuste de icono */}
-                      {fecha ? (
-                        format(fecha, "PP", { locale: es })
-                      ) : (
-                        <span>Selecciona una fecha</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={fecha}
-                      onSelect={setFecha}
-                      initialFocus
-                      disabled={{ before: startOfDay(new Date()) }}
-                      className={""}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
               {/* --- FILA DE INICIO --- */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label
@@ -522,6 +530,40 @@ export default function DashboardProfessor() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              {/* --- FILA DE FECHA --- */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                <Label htmlFor="fecha" className="text-left sm:text-right">
+                  Fecha
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={`col-span-1 sm:col-span-3 justify-start text-left font-normal ${
+                        !fecha && "text-muted-foreground"
+                      }`}
+                    >
+                      <CalendarIcon className="h-4 w-4 mr-2" />{" "}
+                      {/* Ajuste de icono */}
+                      {fecha ? (
+                        format(fecha, "PP", { locale: es })
+                      ) : (
+                        <span>Selecciona una fecha</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={fecha}
+                      onSelect={setFecha}
+                      initialFocus
+                      disabled={{ before: startOfDay(new Date()) }}
+                      className={""}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               {/* --- FILA DE CONEXIÓN --- */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
@@ -734,7 +776,7 @@ export default function DashboardProfessor() {
           </div>
           {/* Fin del contenido del formulario */}
 
-          <DialogFooter className="bottom-0 z-10 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 sm:px-6 sm:py-4">
+          <DialogFooter className="bottom-0 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 sm:px-6 sm:py-4">
             <Button
               variant="outline"
               onClick={() => {
@@ -746,13 +788,24 @@ export default function DashboardProfessor() {
             </Button>
             <Button
               onClick={async () => {
-                await onCreate();
-                resetFormulario();
-                setOpenModal(false);
+                const success = await onCreate();
+                if (success) {
+                  resetFormulario();
+                  setOpenModal(false);
+                }
               }}
               className="bg-[#0D4D98]"
+              disabled={isCreating} // 👈 Deshabilita mientras carga
             >
-              Crear Reservación
+              {/* 👇 Contenido condicional 👇 */}
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span>Creando...</span>
+                </>
+              ) : (
+                <span>Crear Reservación</span>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

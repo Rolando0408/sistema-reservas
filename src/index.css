@@ -3,6 +3,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* SweetAlert2 must always sit above Radix Dialog and other overlays */
+.swal2-container {
+  z-index: 9999 !important;
+}
+.swal2-modal {
+  z-index: 10000 !important;
+}
+
+/* When a SweetAlert is open, disable pointer events on Radix portals (dialogs, popovers, etc.) */
+body.swal2-shown [data-radix-portal] {
+  pointer-events: none !important;
+}
+/* But keep interactions enabled inside the SweetAlert itself */
+body.swal2-shown .swal2-container,
+body.swal2-shown .swal2-container * {
+  pointer-events: auto !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -73,4 +91,12 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.swal2-container {
+  z-index: 100000 !important; /* Valor extremadamente alto */
+}
+
+.swal2-modal {
+  z-index: 100001 !important; /* Aún más alto para el modal */
 }
