@@ -14,8 +14,10 @@ import "./ReservationsTable.css";
 export default function ReservationsTable({
   data = [],
   onCancel,
+  onEdit,
   equipmentMaps = {},
   showCancelButton = true,
+  showEditButton = true,
 }) {
   const [globalFilter, setGlobalFilter] = useState("");
   const headerClass = (id) => {
@@ -208,7 +210,12 @@ export default function ReservationsTable({
         },
       },
       {
-        accessorFn: (row) => row.aula || "",
+        accessorFn: (row) =>
+          (equipmentMaps?.aulas && row.id_aula != null
+            ? equipmentMaps.aulas[row.id_aula]
+            : undefined) ??
+          row.aula ??
+          "",
         id: "aula",
         header: "Aula",
       },
@@ -231,6 +238,7 @@ export default function ReservationsTable({
         header: "Acciones",
         cell: (info) => {
           const id = info.getValue();
+          const row = info.row?.original;
           const handleClick = async () => {
             const result = await Swal.fire({
               title: "¿Cancelar reservación?",
@@ -246,30 +254,56 @@ export default function ReservationsTable({
             if (!result.isConfirmed) return;
             if (typeof onCancel === "function") onCancel(id);
           };
-          return showCancelButton ? (
-            <button
-              className="dt-icon-btn dt-icon-btn--danger"
-              onClick={handleClick}
-              aria-label="Cancelar"
-              title="Cancelar"
-            >
-              <svg
-                className="icon"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                aria-hidden="true"
-              >
-                <path d="M9 3h6a1 1 0 0 1 1 1v2h4v2h-1v11a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8H4V6h4V4a1 1 0 0 1 1-1Zm1 3h4V5h-4v1Zm-3 2v11a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8H7Zm3 2h2v7h-2v-7Zm4 0h2v7h-2v-7Z" />
-              </svg>
-            </button>
-          ) : null;
+          return (
+            <div className="flex gap-2 justify-center">
+              {showEditButton ? (
+                <button
+                  className="dt-icon-btn dt-icon-btn--danger"
+                  onClick={() => {
+                    if (typeof onEdit === "function") onEdit(row || { id });
+                  }}
+                  aria-label="Editar"
+                  title="Editar"
+                >
+                  <svg
+                    className="icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Zm18-11.5a1 1 0 0 0 0-1.41l-1.59-1.59a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.08-1.08Z" />
+                  </svg>
+                </button>
+              ) : null}
+              {showCancelButton ? (
+                <button
+                  className="dt-icon-btn dt-icon-btn--danger"
+                  onClick={handleClick}
+                  aria-label="Cancelar"
+                  title="Cancelar"
+                >
+                  <svg
+                    className="icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    aria-hidden="true"
+                  >
+                    <path d="M9 3h6a1 1 0 0 1 1 1v2h4v2h-1v11a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8H4V6h4V4a1 1 0 0 1 1-1Zm1 3h4V5h-4v1Zm-3 2v11a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8H7Zm3 2h2v7h-2v-7Zm4 0h2v7h-2v-7Z" />
+                  </svg>
+                </button>
+              ) : null}
+            </div>
+          );
         },
       },
     ],
-    [equipmentMaps, showCancelButton, onCancel]
+    [equipmentMaps, showCancelButton, showEditButton, onCancel, onEdit]
   );
 
   const table = useReactTable({
@@ -289,7 +323,7 @@ export default function ReservationsTable({
         <div className="search flex items-center gap-2">
           <input
             type="text"
-            placeholder="Buscar..."
+            placeholder="Buscar reservas por fecha..."
             value={globalFilter ?? ""}
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="block w-full sm:w-64 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0D4D98] focus:border-[#0D4D98]"
@@ -423,6 +457,10 @@ export default function ReservationsTable({
                 </span>
               );
 
+            const aulaNombre =
+              (equipmentMaps?.aulas && r.id_aula != null
+                ? equipmentMaps.aulas[r.id_aula]
+                : undefined) || r.aula;
             return (
               <div key={row.id} className="rounded-md border p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -434,9 +472,9 @@ export default function ReservationsTable({
                       {formatTime(r.fecha_hora_inicio)} -{" "}
                       {formatTime(r.fecha_hora_fin)}
                     </div>
-                    {r.aula ? (
+                    {aulaNombre ? (
                       <div className="text-xs text-gray-700">
-                        Aula: {r.aula}
+                        Aula: {aulaNombre}
                       </div>
                     ) : null}
                   </div>
@@ -449,42 +487,66 @@ export default function ReservationsTable({
                     {pills}
                   </div>
                 ) : null}
-                {showCancelButton ? (
-                <div className="mt-3 flex justify-end">
-                  <button
-                    className="dt-icon-btn dt-icon-btn--danger"
-                    onClick={async () => {
-                      const result = await Swal.fire({
-                        title: "¿Cancelar reservación?",
-                        text: "Esta acción no se puede deshacer.",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonText: "Sí, cancelar",
-                        cancelButtonText: "No",
-                        confirmButtonColor: "#d33",
-                        reverseButtons: true,
-                        focusCancel: true,
-                      });
-                      if (!result.isConfirmed) return;
-                      if (typeof onCancel === "function") onCancel(r.id);
-                    }}
-                    aria-label="Cancelar"
-                    title="Cancelar"
-                  >
-                    <svg
-                      className="icon"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="22"
-                      height="22"
-                      aria-hidden="true"
-                    >
-                      <path d="M9 3h6a1 1 0 0 1 1 1v2h4v2h-1v11a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8H4V6h4V4a1 1 0 0 1 1-1Zm1 3h4V5h-4v1Zm-3 2v11a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8H7Zm3 2h2v7h-2v-7Zm4 0h2v7h-2v-7Z" />
-                    </svg>
-                  </button>
-                </div>
-                ): null}
+                {showEditButton || showCancelButton ? (
+                  <div className="mt-3 flex justify-end gap-2">
+                    {showEditButton ? (
+                      <button
+                        className="dt-icon-btn dt-icon-btn--danger"
+                        onClick={() => {
+                          if (typeof onEdit === "function") onEdit(r);
+                        }}
+                        aria-label="Editar"
+                        title="Editar"
+                      >
+                        <svg
+                          className="icon"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="22"
+                          height="22"
+                          aria-hidden="true"
+                        >
+                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Zm18-11.5a1 1 0 0 0 0-1.41l-1.59-1.59a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.08-1.08Z" />
+                        </svg>
+                      </button>
+                    ) : null}
+                    {showCancelButton ? (
+                      <button
+                        className="dt-icon-btn dt-icon-btn--danger"
+                        onClick={async () => {
+                          const result = await Swal.fire({
+                            title: "¿Cancelar reservación?",
+                            text: "Esta acción no se puede deshacer.",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "Sí, cancelar",
+                            cancelButtonText: "No",
+                            confirmButtonColor: "#d33",
+                            reverseButtons: true,
+                            focusCancel: true,
+                          });
+                          if (!result.isConfirmed) return;
+                          if (typeof onCancel === "function") onCancel(r.id);
+                        }}
+                        aria-label="Cancelar"
+                        title="Cancelar"
+                      >
+                        <svg
+                          className="icon"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="22"
+                          height="22"
+                          aria-hidden="true"
+                        >
+                          <path d="M9 3h6a1 1 0 0 1 1 1v2h4v2h-1v11a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8H4V6h4V4a1 1 0 0 1 1-1Zm1 3h4V5h-4v1Zm-3 2v11a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8H7Zm3 2h2v7h-2v-7Zm4 0h2v7h-2v-7Z" />
+                        </svg>
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             );
           })

@@ -42,7 +42,7 @@ export default function Sidebar({ isCollapsed }) {
         fixed inset-y-0 left-0
         ${isCollapsed ? "-translate-x-full" : "translate-x-0"}
         md:relative md:translate-x-0
-        ${isCollapsed ? "md:w-16 md:px-2 md:py-4" : "md:w-64 md:p-4"}`}
+        ${isCollapsed ? "md:w-16 md:px-2 md:py-4" : "md:w-22 md:p-2"}`}
     >
       {/* --- ENCABEZADO MODIFICADO --- */}
       <div

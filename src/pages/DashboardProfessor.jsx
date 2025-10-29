@@ -8,16 +8,19 @@ import {
   getEquipos,
   getLaptops,
   getExtensiones,
+  getAulas,
   listMisReservas,
   listEquiposDisponibles,
   listLaptopsDisponibles,
   listExtensionesDisponibles,
   createReserva,
   cancelReserva,
+  updateReserva,
 } from "../lib/reservas";
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input"; // No longer used
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -65,17 +68,23 @@ export default function DashboardProfessor() {
   const [laptopId, setLaptopId] = useState("none"); // Usa 'none' para opcional
   const [extensionId, setExtensionId] = useState("none");
   const [decanatoId, setDecanatoId] = useState("none");
-  const [aula, setAula] = useState("");
+  const [aulas, setAulas] = useState([]);
+  const [aulaId, setAulaId] = useState("");
+  const [aulaOpen, setAulaOpen] = useState(false);
+  const [aulaSearch, setAulaSearch] = useState("");
 
   const [equiposDisponibles, setEquiposDisponibles] = useState([]);
   const [laptopsDisponibles, setLaptopsDisponibles] = useState([]);
   const [extensionesDisponibles, setExtensionesDisponibles] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [blockDialogClose, setBlockDialogClose] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingReservaId, setEditingReservaId] = useState(null);
 
   const [mapEquipos, setMapEquipos] = useState({});
   const [mapLaptops, setMapLaptops] = useState({});
   const [mapExtensiones, setMapExtensiones] = useState({});
+  const [mapAulas, setMapAulas] = useState({});
   const [warningTarget, setWarningTarget] = useState(null);
 
   // Guard de ruta (Sin cambios)
@@ -107,17 +116,23 @@ export default function DashboardProfessor() {
         setLoading(true);
         setReservasLoading(true);
 
-        const [hs, decs, mis, eqsAll, lapsAll, extsAll] = await Promise.all([
-          getHorarios(),
-          getDecanatos(),
-          listMisReservas({ futuras: true }),
-          getEquipos({ onlyDisponibles: false }),
-          getLaptops({ onlyDisponibles: false }),
-          getExtensiones({ onlyDisponibles: false }),
-        ]);
-        setHorarios(hs);
-        setDecanatos(decs);
-        setReservas(mis);
+        const [hs, decs, aulasData, mis, eqsAll, lapsAll, extsAll] =
+          await Promise.all([
+            getHorarios(),
+            getDecanatos(),
+            getAulas(),
+            listMisReservas({ futuras: true }),
+            getEquipos({ onlyDisponibles: false }),
+            getLaptops({ onlyDisponibles: false }),
+            getExtensiones({ onlyDisponibles: false }),
+          ]);
+        setHorarios(hs || []);
+        setDecanatos(decs || []);
+        setAulas(aulasData || []);
+        // Excluir canceladas de "Mis reservas" (próximas)
+        setReservas(
+          (mis || []).filter((r) => r.estado !== ESTADOS_RESERVA.CANCELADA)
+        );
         // Construir mapas (lógica reducida para concisión, se asume correcta)
         setMapEquipos(
           (eqsAll || []).reduce((acc, it) => {
@@ -138,6 +153,12 @@ export default function DashboardProfessor() {
         setMapExtensiones(
           (extsAll || []).reduce((acc, it) => {
             acc[it.id] = it.nombre_extension;
+            return acc;
+          }, {})
+        );
+        setMapAulas(
+          (aulasData || []).reduce((acc, it) => {
+            acc[it.id] = it.nombre_aula;
             return acc;
           }, {})
         );
@@ -180,16 +201,19 @@ export default function DashboardProfessor() {
             endHorarioId: finIdNum,
             requireHdmi: needHdmi,
             requireVga: needVga,
+            excludeReservaId: isEditMode ? editingReservaId : null,
           }),
           listLaptopsDisponibles({
             dateYYYYMMDD: fechaFormateada,
             startHorarioId: inicioIdNum,
             endHorarioId: finIdNum,
+            excludeReservaId: isEditMode ? editingReservaId : null,
           }),
           listExtensionesDisponibles({
             dateYYYYMMDD: fechaFormateada,
             startHorarioId: inicioIdNum,
             endHorarioId: finIdNum,
+            excludeReservaId: isEditMode ? editingReservaId : null,
           }),
         ]);
 
@@ -243,6 +267,8 @@ export default function DashboardProfessor() {
     equipoId,
     laptopId,
     extensionId,
+    isEditMode,
+    editingReservaId,
   ]);
 
   // --- LÓGICA DEL FILTRO DE HORARIOS PASADOS ---
@@ -340,7 +366,7 @@ export default function DashboardProfessor() {
       if (!connectionType) missing.push("tipo de conexión");
       if (!equipoId) missing.push("proyector");
       if (!decanatoId || decanatoId === "none") missing.push("decanato");
-      if (!aula || !aula.trim()) missing.push("aula");
+      if (!aulaId || !aulaId.trim()) missing.push("aula");
 
       if (missing.length > 0) {
         setBlockDialogClose(true);
@@ -367,7 +393,7 @@ export default function DashboardProfessor() {
           extensionId && extensionId !== "none" ? Number(extensionId) : null,
         id_decanato:
           decanatoId && decanatoId !== "none" ? Number(decanatoId) : null,
-        aula,
+        id_aula: aulaId ? Number(aulaId) : null,
       });
 
       setBlockDialogClose(true);
@@ -380,7 +406,10 @@ export default function DashboardProfessor() {
       setTimeout(() => setBlockDialogClose(false), 120);
 
       const mis = await listMisReservas({ futuras: true });
-      setReservas(mis);
+      // Excluir canceladas de "Mis reservas" inmediatamente tras crear
+      setReservas(
+        (mis || []).filter((r) => r.estado !== ESTADOS_RESERVA.CANCELADA)
+      );
       return true; // Indica éxito para que el footer cierre el modal
     } catch (err) {
       setBlockDialogClose(true);
@@ -403,8 +432,11 @@ export default function DashboardProfessor() {
     try {
       await cancelReserva({ reservaId: id });
       Swal.fire("Cancelada", "La reserva fue cancelada", "success");
+      // Refrescar y excluir canceladas de la lista de próximas
       const mis = await listMisReservas({ futuras: true });
-      setReservas(mis);
+      setReservas(
+        (mis || []).filter((r) => r.estado !== ESTADOS_RESERVA.CANCELADA)
+      );
     } catch (err) {
       Swal.fire(
         "No se pudo cancelar",
@@ -424,10 +456,12 @@ export default function DashboardProfessor() {
     setLaptopId("none");
     setExtensionId("none");
     setDecanatoId("none");
-    setAula("");
+    setAulaId("");
     setEquiposDisponibles([]);
     setLaptopsDisponibles([]);
     setExtensionesDisponibles([]);
+    setIsEditMode(false);
+    setEditingReservaId(null);
   };
 
   const requisitosCompletos =
@@ -444,6 +478,138 @@ export default function DashboardProfessor() {
     } else {
       // Si los requisitos SÍ están completos (aunque no debería llamarse aquí), oculta el aviso
       setWarningTarget(null);
+    }
+  };
+
+  // Helpers para obtener fecha y hora local Caracas desde ISO
+  const isoToCaracasParts = (iso) => {
+    const d = new Date(iso);
+    const parts = new Intl.DateTimeFormat("es-VE", {
+      timeZone: "America/Caracas",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(d);
+    const get = (type) => parts.find((p) => p.type === type)?.value || "";
+    return {
+      y: Number(get("year")),
+      m: Number(get("month")),
+      d: Number(get("day")),
+      hh: get("hour"),
+      mm: get("minute"),
+    };
+  };
+
+  const startEdit = (row) => {
+    try {
+      setIsEditMode(true);
+      setEditingReservaId(row.id);
+
+      // Fecha desde ISO (Caracas)
+      const sp = isoToCaracasParts(row.fecha_hora_inicio);
+      const fechaLocal = new Date(sp.y, sp.m - 1, sp.d);
+      setFecha(fechaLocal);
+
+      // Derivar HH:mm:ss en Caracas y mapear a IDs de horarios
+      const startHHMMSS = `${sp.hh}:${sp.mm}:00`;
+      const endParts = isoToCaracasParts(row.fecha_hora_fin);
+      const endHHMMSS = `${endParts.hh}:${endParts.mm}:00`;
+      const hIni = horarios.find((h) => h.hora === startHHMMSS);
+      const hFin = horarios.find((h) => h.hora === endHHMMSS);
+      setHoraInicioId(hIni ? String(hIni.id) : "");
+      setHoraFinId(hFin ? String(hFin.id) : "");
+
+      // Tipo de conexión a partir del equipo actual
+      const spec = row.id_equipo ? mapEquipos[row.id_equipo] : null;
+      if (spec?.hdmi) setConnectionType("HDMI");
+      else if (spec?.vga) setConnectionType("VGA");
+      else setConnectionType("");
+
+      setEquipoId(row.id_equipo != null ? String(row.id_equipo) : "");
+      setLaptopId(row.id_laptop != null ? String(row.id_laptop) : "none");
+      setExtensionId(
+        row.id_extension != null ? String(row.id_extension) : "none"
+      );
+      setDecanatoId(row.id_decanato != null ? String(row.id_decanato) : "none");
+      setAulaId(row.id_aula != null ? String(row.id_aula) : "");
+
+      setOpenModal(true);
+    } catch (e) {
+      console.error("Error al preparar edición:", e);
+      Swal.fire("Error", "No se pudo abrir la edición", "error");
+    }
+  };
+
+  const onUpdate = async () => {
+    setIsCreating(true);
+    try {
+      const missing = [];
+      if (!fecha) missing.push("fecha");
+      if (!horaInicioId) missing.push("hora de inicio");
+      if (!horaFinId) missing.push("hora de fin");
+      if (!connectionType) missing.push("tipo de conexión");
+      if (!equipoId) missing.push("proyector");
+      if (!decanatoId || decanatoId === "none") missing.push("decanato");
+      if (!aulaId || !aulaId.trim()) missing.push("aula");
+
+      if (missing.length > 0) {
+        setBlockDialogClose(true);
+        await Swal.fire({
+          title: "Faltan datos",
+          html: `Debes completar: <b>${missing.join(", ")}</b>.`,
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Entendido",
+        });
+        setTimeout(() => setBlockDialogClose(false), 120);
+        return false;
+      }
+
+      await updateReserva({
+        reservaId: editingReservaId,
+        dateYYYYMMDD: format(fecha, "yyyy-MM-dd"),
+        startHorarioId: Number(horaInicioId),
+        endHorarioId: Number(horaFinId),
+        id_equipo: Number(equipoId),
+        id_laptop: laptopId && laptopId !== "none" ? Number(laptopId) : null,
+        id_extension:
+          extensionId && extensionId !== "none" ? Number(extensionId) : null,
+        id_decanato:
+          decanatoId && decanatoId !== "none" ? Number(decanatoId) : null,
+        id_aula: aulaId ? Number(aulaId) : null,
+      });
+
+      setBlockDialogClose(true);
+      await Swal.fire({
+        title: "Reserva actualizada",
+        text: "Los cambios se guardaron correctamente",
+        icon: "success",
+        allowOutsideClick: false,
+      });
+      setTimeout(() => setBlockDialogClose(false), 120);
+
+      const mis = await listMisReservas({ futuras: true });
+      setReservas(
+        (mis || []).filter((r) => r.estado !== ESTADOS_RESERVA.CANCELADA)
+      );
+      return true;
+    } catch (err) {
+      setBlockDialogClose(true);
+      await Swal.fire({
+        title: "Error",
+        text: err.message || "No se pudo actualizar la reserva",
+        icon: "error",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+      setTimeout(() => setBlockDialogClose(false), 120);
+      return false;
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -478,9 +644,13 @@ export default function DashboardProfessor() {
           className="p-0 h-[100dvh] w-full rounded-none sm:h-auto sm:w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl sm:rounded-lg sm:p-6 flex flex-col"
         >
           <DialogHeader className="sticky top-0 border-b px-4 py-3 sm:px-6 sm:py-4">
-            <DialogTitle>Nueva Reservación</DialogTitle>
+            <DialogTitle>
+              {isEditMode ? "Editar reservación" : "Nueva Reservación"}
+            </DialogTitle>
             <DialogDescription>
-              Completa todos los campos para crear tu reserva.
+              {isEditMode
+                ? "Modifica los campos y guarda los cambios."
+                : "Completa todos los campos para crear tu reserva."}
             </DialogDescription>
           </DialogHeader>
 
@@ -758,20 +928,114 @@ export default function DashboardProfessor() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* --- FILA DE AULA --- */}
+              {/* --- FILA DE AULA (MODIFICADA) --- */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="aula" className="text-left sm:text-right">
                   Aula
                 </Label>
-                <Input
-                  id="aula"
-                  type="text"
-                  value={aula}
-                  onChange={(e) => setAula(e.target.value)}
-                  placeholder="Ej: Aula 101"
-                  className="col-span-1 sm:col-span-3"
-                />
+                {/* Combobox de aulas (buscable) */}
+                <div className="col-span-1 sm:col-span-3">
+                  <Popover open={aulaOpen} onOpenChange={setAulaOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={aulaOpen}
+                        className={`w-full justify-between ${
+                          aulaId ? "text-black" : "text-muted-foreground"
+                        }`}
+                        id="aula"
+                      >
+                        {(() => {
+                          const sel = aulas.find(
+                            (x) => String(x.id) === aulaId
+                          );
+                          return sel ? sel.nombre_aula : "Seleccione un aula";
+                        })()}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="ml-2 size-4 opacity-60"
+                          aria-hidden="true"
+                        >
+                          <path d="M7 10l5 5 5-5H7z" />
+                        </svg>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="p-2 w-[--radix-popover-trigger-width] min-w-[260px] max-h-80 overflow-auto overscroll-contain"
+                      data-scroll-lock-scrollable
+                      onWheelCapture={(e) => e.stopPropagation()}
+                      onWheel={(e) => e.stopPropagation()}
+                    >
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="Buscar aula..."
+                          value={aulaSearch}
+                          onChange={(e) => setAulaSearch(e.target.value)}
+                          autoFocus
+                          className="text-black"
+                        />
+                        <div
+                          className="max-h-60 overflow-y-auto rounded-md border overscroll-contain"
+                          data-scroll-lock-scrollable
+                          tabIndex={0}
+                          onWheelCapture={(e) => e.stopPropagation()}
+                          onWheel={(e) => e.stopPropagation()}
+                        >
+                          {(() => {
+                            const term = aulaSearch.trim().toLowerCase();
+                            const list = (aulas || []).filter((a) =>
+                              a.nombre_aula.toLowerCase().includes(term)
+                            );
+                            if (list.length === 0) {
+                              return (
+                                <div className="px-3 py-2 text-sm text-muted-foreground">
+                                  {aulas.length === 0
+                                    ? "No hay aulas disponibles."
+                                    : "Sin resultados."}
+                                </div>
+                              );
+                            }
+                            return list.map((a) => {
+                              const selected = String(a.id) === aulaId;
+                              return (
+                                <button
+                                  key={a.id}
+                                  type="button"
+                                  className={
+                                    "w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center justify-between text-black" +
+                                    (selected ? " bg-accent/60" : "")
+                                  }
+                                  onClick={() => {
+                                    setAulaId(String(a.id));
+                                    setAulaOpen(false);
+                                  }}
+                                >
+                                  <span>{a.nombre_aula}</span>
+                                  {selected ? (
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      viewBox="0 0 24 24"
+                                      fill="currentColor"
+                                      className="size-4 opacity-80"
+                                    >
+                                      <path d="M9 16.2l-3.5-3.5 1.4-1.4L9 13.4l7.1-7.1 1.4 1.4z" />
+                                    </svg>
+                                  ) : null}
+                                </button>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
+              {/* --- FIN FILA DE AULA --- */}
             </div>
           </div>
           {/* Fin del contenido del formulario */}
@@ -788,7 +1052,9 @@ export default function DashboardProfessor() {
             </Button>
             <Button
               onClick={async () => {
-                const success = await onCreate();
+                const success = isEditMode
+                  ? await onUpdate()
+                  : await onCreate();
                 if (success) {
                   resetFormulario();
                   setOpenModal(false);
@@ -801,10 +1067,12 @@ export default function DashboardProfessor() {
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  <span>Creando...</span>
+                  <span>{isEditMode ? "Guardando..." : "Creando..."}</span>
                 </>
               ) : (
-                <span>Crear Reservación</span>
+                <span>
+                  {isEditMode ? "Guardar cambios" : "Crear Reservación"}
+                </span>
               )}
             </Button>
           </DialogFooter>
@@ -817,7 +1085,11 @@ export default function DashboardProfessor() {
           <h2 className="titleReservas font-bold text-lg">Mis reservas</h2>
           <Button
             className="btnCreateReserva bg-[#0D4D98]"
-            onClick={() => setOpenModal(true)}
+            onClick={() => {
+              setIsEditMode(false);
+              setEditingReservaId(null);
+              setOpenModal(true);
+            }}
           >
             + Crear Reservación
           </Button>
@@ -834,10 +1106,12 @@ export default function DashboardProfessor() {
           <ReservationsTable
             data={reservas}
             onCancel={(id) => onCancel(id)}
+            onEdit={(row) => startEdit(row)}
             equipmentMaps={{
               equipos: mapEquipos,
               laptops: mapLaptops,
               extensiones: mapExtensiones,
+              aulas: mapAulas,
             }}
           />
         )}

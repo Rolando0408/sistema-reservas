@@ -5,6 +5,8 @@ import {
   getEquipos,
   getLaptops,
   getExtensiones,
+  getAulas,
+  ESTADOS_RESERVA,
 } from "../lib/reservas";
 import ReservationsTable from "../components/ReservationsTable"; // Reutiliza tu tabla
 import { Loader2 } from "lucide-react"; // Para el spinner
@@ -17,6 +19,7 @@ export default function HistorialReservas() {
   const [mapEquipos, setMapEquipos] = useState({});
   const [mapLaptops, setMapLaptops] = useState({});
   const [mapExtensiones, setMapExtensiones] = useState({});
+  const [mapAulas, setMapAulas] = useState({});
 
   // Carga el historial de reservas y los mapas al montar el componente
   useEffect(() => {
@@ -26,19 +29,22 @@ export default function HistorialReservas() {
 
         const todasMisReservas = await listMisReservas({ futuras: false }); // O simplemente llama sin argumentos si trae todas por defecto
 
-        // Filtra para obtener solo las reservas pasadas
+        // Filtra para historial: reservas finalizadas en el tiempo o canceladas
         const ahora = new Date();
         const historial = (todasMisReservas || []).filter(
-          (r) => new Date(r.fecha_hora_fin) < ahora // Compara si la fecha de fin ya pasó
+          (r) =>
+            r.estado === ESTADOS_RESERVA.CANCELADA ||
+            new Date(r.fecha_hora_fin) < ahora
         );
 
         setHistorialReservas(historial);
 
         // Carga los mapas necesarios para la tabla
-        const [eqsAll, lapsAll, extsAll] = await Promise.all([
+        const [eqsAll, lapsAll, extsAll, aulasAll] = await Promise.all([
           getEquipos({ onlyDisponibles: false }),
           getLaptops({ onlyDisponibles: false }),
           getExtensiones({ onlyDisponibles: false }),
+          getAulas(),
         ]);
         setMapEquipos(
           (eqsAll || []).reduce((acc, it) => {
@@ -59,6 +65,12 @@ export default function HistorialReservas() {
         setMapExtensiones(
           (extsAll || []).reduce((acc, it) => {
             acc[it.id] = it.nombre_extension;
+            return acc;
+          }, {})
+        );
+        setMapAulas(
+          (aulasAll || []).reduce((acc, it) => {
+            acc[it.id] = it.nombre_aula;
             return acc;
           }, {})
         );
@@ -104,8 +116,10 @@ export default function HistorialReservas() {
             equipos: mapEquipos,
             laptops: mapLaptops,
             extensiones: mapExtensiones,
+            aulas: mapAulas,
           }}
-          showCancelButton={false} // 👈 Añade esta prop para ocultar el botón
+          showCancelButton={false} // 👈 Oculta cancelar en historial
+          showEditButton={false} // 👈 Oculta editar en historial
         />
       )}
     </div>

@@ -144,13 +144,12 @@
   flex-wrap: wrap;
 }
 
-.page-size select{
+.page-size select {
   background-color: #ffff;
   color: black;
   border-color: #d1d5db;
   margin-left: 10px;
-  font-family: montserrat, sans-serif;
+  font-family: "Montserrat", sans-serif;
   text-align: center;
   border-radius: 5px;
 }
-
