@@ -357,6 +357,7 @@ export async function createReserva({
     throw new Error("Conflicto de horario con algún recurso seleccionado");
   }
 
+
   // INSERTA USANDO UTC ISO String
   const { error } = await supabase.from("reservas").insert(
     [
@@ -471,4 +472,37 @@ export async function updateReserva({
     })
     .eq("id", reservaId);
   if (error) throw error;
+}
+
+export async function getReservationsForDay({ dateYYYYMMDD }) {
+  const T_Z = "America/Caracas"; // Reutiliza tu constante TIME_ZONE
+
+  // Calcula el inicio del día en UTC (Caracas)
+  const startOfDayLocal = parse(
+    `${dateYYYYMMDD} 00:00:00`,
+    "yyyy-MM-dd HH:mm:ss",
+    new Date()
+  );
+  const startOfDayUTC = fromZonedTime(startOfDayLocal, T_Z).toISOString();
+
+  // Calcula el fin del día en UTC (Caracas)
+  const endOfDayLocal = parse(
+    `${dateYYYYMMDD} 23:59:59`,
+    "yyyy-MM-dd HH:mm:ss",
+    new Date()
+  );
+  const endOfDayUTC = fromZonedTime(endOfDayLocal, T_Z).toISOString();
+
+  const { data, error } = await supabase
+    .from("reservas")
+    .select("id, id_equipo, fecha_hora_inicio, fecha_hora_fin") // Trae las fechas UTC
+    .gte("fecha_hora_inicio", startOfDayUTC) // Que empiecen después del inicio del día
+    .lte("fecha_hora_inicio", endOfDayUTC) // Y que empiecen antes del fin del día
+    .in("estado", ESTADOS_BLOQUEAN); // Solo activas o pendientes
+
+  if (error) {
+    console.error("Error fetching reservations for day:", error);
+    throw error;
+  }
+  return data || [];
 }

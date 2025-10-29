@@ -18,7 +18,7 @@ import {
   updateReserva,
 } from "../lib/reservas";
 import { supabase } from "@/lib/supabaseClient";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -1081,15 +1081,19 @@ export default function DashboardProfessor() {
 
       {/* Listado de reservas y encabezado con botón */}
       <div className="lista-reservas">
-        <div className="reservas-header">
-          <h2 className="titleReservas font-bold text-lg">Mis reservas</h2>
+        <div className="reservas-header flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+          <div className="flex items-center gap-4">
+            <h2 className="titleReservas font-bold text-xl">Mis reservas</h2>
+            <Link
+              to="/app/disponibilidad" // Ruta a la nueva página
+              className="text-sm text-blue-500 hover:underline hover:text-purple-700 ml-[-9px]"
+            >
+              (Ver disponibilidad general)
+            </Link>
+          </div>
           <Button
-            className="btnCreateReserva bg-[#0D4D98]"
-            onClick={() => {
-              setIsEditMode(false);
-              setEditingReservaId(null);
-              setOpenModal(true);
-            }}
+            className="btnCreateReserva bg-[#0D4D98] w-full sm:w-auto"
+            onClick={() => setOpenModal(true)}
           >
             + Crear Reservación
           </Button>
