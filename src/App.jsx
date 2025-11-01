@@ -8,6 +8,9 @@ import HistorialReservas from "./pages/HistorialReservas.jsx";
 import ProtectedRoute from "./lib/ProtectedRoute.jsx";
 import ProfessorLayout from "./layouts/ProfessorLayout.jsx";
 import Disponibilidad from "./pages/Disponibilidad.jsx"; // <-- Importado
+import AdminLayout from "./layouts/AdminLayout.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
+import AdminHistorial from "./pages/AdminHistorial.jsx";
 
 function App() {
   return (
@@ -36,6 +39,21 @@ function App() {
           <Route path="historial" element={<HistorialReservas />} />
 
           <Route path="disponibilidad" element={<Disponibilidad />} />
+        </Route>
+
+        {/* Rutas de Admin */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="disponibilidad" element={<Disponibilidad />} />
+          <Route path="historial" element={<AdminHistorial />} />
         </Route>
 
         {/* Fallback (atrapa cualquier ruta no definida y la envía al inicio) */}

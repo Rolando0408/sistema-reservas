@@ -43,6 +43,13 @@
   border-color: #d1d5db; /* gray-300 */
 }
 
+/* Reservado - blue */
+.estado-reservado {
+  background-color: #dbeafe; /* blue-100 */
+  color: #1e40af; /* blue-800 */
+  border-color: #93c5fd; /* blue-300 */
+}
+
 /* Action icon button styles */
 .dt-icon-btn {
   display: inline-flex;

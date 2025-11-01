@@ -155,7 +155,13 @@ export default function Disponibilidad() {
                     setCalendarOpen(false);
                   }}
                   initialFocus
-                  disabled={{ before: startOfDay(new Date()) }}
+                  // Deshabilita fechas pasadas y fines de semana (sábado y domingo)
+                  disabled={(date) => {
+                    const isPast = date < startOfDay(new Date());
+                    const dow = date.getDay();
+                    const isWeekend = dow === 0 || dow === 6; // 0=Domingo, 6=Sábado
+                    return isPast || isWeekend;
+                  }}
                 />
               </PopoverContent>
             </Popover>

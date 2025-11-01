@@ -27,14 +27,13 @@ export default function HistorialReservas() {
       try {
         setHistorialLoading(true);
 
-        const todasMisReservas = await listMisReservas({ futuras: false }); // O simplemente llama sin argumentos si trae todas por defecto
+        const todasMisReservas = await listMisReservas({ futuras: false });
 
-        // Filtra para historial: reservas finalizadas en el tiempo o canceladas
-        const ahora = new Date();
+        // Historial: solo Canceladas o Completadas
         const historial = (todasMisReservas || []).filter(
           (r) =>
             r.estado === ESTADOS_RESERVA.CANCELADA ||
-            new Date(r.fecha_hora_fin) < ahora
+            r.estado === ESTADOS_RESERVA.COMPLETADA
         );
 
         setHistorialReservas(historial);

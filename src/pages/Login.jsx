@@ -51,6 +51,11 @@ export default function Login() {
 
       if (perfil?.id_rol_fk === 2) {
         navigate("/app/dashboard");
+      } else if (perfil?.id_rol_fk === 1) {
+        navigate("/admin/dashboard");
+      } else {
+        // Rol desconocido: al inicio
+        navigate("/");
       }
     } catch (error) {
       await Swal.fire({

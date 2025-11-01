@@ -1,17 +1,21 @@
 // src/lib/reservas.js
 import { supabase } from "@/lib/supabaseClient";
-import { parse } from "date-fns"; // Para convertir strings a objetos Date
-// En date-fns-tz v3 la función correcta para convertir a UTC desde una zona es 'fromZonedTime'
+import { parse } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
-// 0 = pendiente, 1 = activa, 2 = cancelada, 3 = finalizada
+// Estados de reserva (persistidos en DB)
+// 0 = RESERVADO (creada, aún no inicia)
+// 1 = ACTIVA (en curso)
+// 2 = CANCELADA
+// 3 = COMPLETADA (entregada por admin)
 export const ESTADOS_RESERVA = {
-  PENDIENTE: 0,
+  RESERVADO: 0,
   ACTIVA: 1,
   CANCELADA: 2,
-  FINALIZADA: 3,
+  COMPLETADA: 3,
 };
 
-const ESTADOS_BLOQUEAN = [ESTADOS_RESERVA.PENDIENTE, ESTADOS_RESERVA.ACTIVA];
+// Estados que bloquean recursos mientras el rango horario se solapa
+const ESTADOS_BLOQUEAN = [ESTADOS_RESERVA.RESERVADO, ESTADOS_RESERVA.ACTIVA];
 
 // Zona horaria de Venezuela para las conversiones
 const TIME_ZONE = "America/Caracas";
@@ -83,6 +87,28 @@ export async function getDecanatos() {
   return data || [];
 }
 
+// Lista de profesores (usuarios con rol 2)
+export async function listProfesores() {
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("id, nombre_completo, email, id_rol_fk")
+    .eq("id_rol_fk", 2)
+    .order("nombre_completo", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Obtiene usuarios por IDs específicos (para mapear nombres en tablas)
+export async function getUsuariosByIds(ids = []) {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("id, nombre_completo, email")
+    .in("id", ids);
+  if (error) throw error;
+  return data || [];
+}
+
 // Helpers horarios (Sin cambios)
 export async function getHorarioById(id) {
   const { data, error } = await supabase
@@ -113,6 +139,43 @@ export async function getAulas() {
     .order("nombre_aula", { ascending: true });
   if (error) throw error;
   return data || [];
+}
+
+// Disponibilidad de aulas para un rango: devuelve solo las aulas disponibles
+export async function listAulasDisponibles({
+  dateYYYYMMDD,
+  startHorarioId,
+  endHorarioId,
+  excludeReservaId = null,
+}) {
+  const [{ hora: horaInicio }, { hora: horaFin }] = await Promise.all([
+    getHorarioById(startHorarioId),
+    getHorarioById(endHorarioId),
+  ]);
+
+  // Convierte a UTC y obtiene ISO string
+  const startUTC = getUTCDateTime(dateYYYYMMDD, horaInicio);
+  const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
+  const startISO_UTC = startUTC.toISOString();
+  const endISO_UTC = endUTC.toISOString();
+
+  const aulas = await getAulas();
+  if (!aulas?.length) return [];
+  const aulaIds = aulas.map((a) => a.id);
+
+  let resQuery = supabase
+    .from("reservas")
+    .select("id, id_aula")
+    .in("id_aula", aulaIds)
+    .lt("fecha_hora_inicio", endISO_UTC) // Compara con UTC
+    .gt("fecha_hora_fin", startISO_UTC) // Compara con UTC
+    .in("estado", ESTADOS_BLOQUEAN);
+  if (excludeReservaId != null) resQuery = resQuery.neq("id", excludeReservaId);
+  const { data: reservasSolape, error: resErr } = await resQuery;
+  if (resErr) throw resErr;
+  const ocupadas = new Set((reservasSolape || []).map((r) => r.id_aula));
+
+  return aulas.filter((a) => !ocupadas.has(a.id));
 }
 
 // Disponibilidad de equipos para un rango: devuelve solo los equipos disponibles
@@ -271,6 +334,30 @@ export async function listMisReservas({
   return data || [];
 }
 
+// Lista todas las reservas (admin)
+export async function listReservasAll({
+  futuras = false,
+  rangeStartISO,
+  rangeEndISO,
+} = {}) {
+  let query = supabase
+    .from("reservas")
+    .select(
+      "id, id_usuario, id_equipo, id_laptop, id_extension, id_decanato, id_aula, fecha_hora_inicio, fecha_hora_fin, estado"
+    );
+
+  if (futuras) {
+    query = query.gte("fecha_hora_fin", nowISO());
+  }
+  if (rangeStartISO) query = query.lt("fecha_hora_inicio", rangeEndISO);
+  if (rangeEndISO) query = query.gt("fecha_hora_fin", rangeStartISO);
+
+  query = query.order("fecha_hora_inicio", { ascending: true });
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
 // Valida solapes para un conjunto de recursos concretos
 export async function checkConflictos({
   dateYYYYMMDD,
@@ -279,6 +366,7 @@ export async function checkConflictos({
   id_equipo,
   id_laptop,
   id_extension,
+  id_aula,
   excludeReservaId = null,
 }) {
   const [{ hora: horaInicio }, { hora: horaFin }] = await Promise.all([
@@ -297,12 +385,13 @@ export async function checkConflictos({
   if (id_equipo != null) ors.push(`and(id_equipo.eq.${id_equipo})`);
   if (id_laptop != null) ors.push(`and(id_laptop.eq.${id_laptop})`);
   if (id_extension != null) ors.push(`and(id_extension.eq.${id_extension})`);
+  if (id_aula != null) ors.push(`and(id_aula.eq.${id_aula})`);
 
   if (!ors.length) return { conflicto: false };
 
   let query = supabase
     .from("reservas")
-    .select("id, id_equipo, id_laptop, id_extension")
+    .select("id, id_equipo, id_laptop, id_extension, id_aula")
     .lt("fecha_hora_inicio", endISO_UTC) // Compara con UTC
     .gt("fecha_hora_fin", startISO_UTC) // Compara con UTC
     .in("estado", ESTADOS_BLOQUEAN)
@@ -325,7 +414,7 @@ export async function createReserva({
   id_extension = null,
   id_decanato = null,
   id_aula = null,
-  estado = ESTADOS_RESERVA.ACTIVA, // sin aprobación -> activa
+  estado = ESTADOS_RESERVA.RESERVADO, // al crear -> Reservado
 }) {
   const userId = await getUserId();
   const [{ hora: horaInicio }, { hora: horaFin }] = await Promise.all([
@@ -352,11 +441,11 @@ export async function createReserva({
     id_equipo,
     id_laptop,
     id_extension,
+    id_aula,
   });
   if (conflicto) {
     throw new Error("Conflicto de horario con algún recurso seleccionado");
   }
-
 
   // INSERTA USANDO UTC ISO String
   const { error } = await supabase.from("reservas").insert(
@@ -378,6 +467,65 @@ export async function createReserva({
   if (error) throw error;
 }
 
+// Crea reserva para un usuario específico (admin)
+export async function createReservaForUser({
+  userId,
+  dateYYYYMMDD,
+  startHorarioId,
+  endHorarioId,
+  id_equipo,
+  id_laptop = null,
+  id_extension = null,
+  id_decanato = null,
+  id_aula = null,
+  estado = ESTADOS_RESERVA.RESERVADO,
+}) {
+  const [{ hora: horaInicio }, { hora: horaFin }] = await Promise.all([
+    getHorarioById(startHorarioId),
+    getHorarioById(endHorarioId),
+  ]);
+
+  const startUTC = getUTCDateTime(dateYYYYMMDD, horaInicio);
+  const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
+  const startISO_UTC = startUTC.toISOString();
+  const endISO_UTC = endUTC.toISOString();
+
+  if (endUTC <= startUTC) {
+    throw new Error("La hora de fin debe ser mayor a la de inicio");
+  }
+
+  const { conflicto } = await checkConflictos({
+    dateYYYYMMDD,
+    startHorarioId,
+    endHorarioId,
+    id_equipo,
+    id_laptop,
+    id_extension,
+    id_aula,
+  });
+  if (conflicto) {
+    throw new Error("Conflicto de horario con algún recurso seleccionado");
+  }
+
+  const { error } = await supabase.from("reservas").insert(
+    [
+      {
+        id_usuario: userId,
+        id_equipo,
+        id_laptop,
+        id_extension,
+        id_decanato,
+        id_aula,
+        fecha_hora_inicio: startISO_UTC,
+        fecha_hora_fin: endISO_UTC,
+        estado,
+      },
+    ],
+    { returning: "minimal" }
+  );
+  if (error) throw error;
+}
+
 // Cancelar reserva (Sin cambios, ya que compara fechas ISO)
 export async function cancelReserva({ reservaId }) {
   const { data, error } = await supabase
@@ -391,7 +539,7 @@ export async function cancelReserva({ reservaId }) {
   const ahora = new Date(); // Hora actual UTC
   if (new Date(fin) <= ahora) {
     // Compara UTC con UTC
-    throw new Error("No se puede cancelar una reserva finalizada");
+    throw new Error("No se puede cancelar una reserva pendiente");
   }
 
   const { error: upErr } = await supabase
@@ -399,6 +547,15 @@ export async function cancelReserva({ reservaId }) {
     .update({ estado: ESTADOS_RESERVA.CANCELADA })
     .eq("id", reservaId);
   if (upErr) throw upErr;
+}
+
+// Marcar una reserva como completada (solo admins deberían usarlo en UI)
+export async function completeReserva({ reservaId }) {
+  const { error } = await supabase
+    .from("reservas")
+    .update({ estado: ESTADOS_RESERVA.COMPLETADA })
+    .eq("id", reservaId);
+  if (error) throw error;
 }
 
 // Para calendario del profesor (Sin cambios, ya que compara fechas ISO)
@@ -453,6 +610,7 @@ export async function updateReserva({
     id_equipo,
     id_laptop,
     id_extension,
+    id_aula,
     excludeReservaId: reservaId,
   });
   if (conflicto) {
