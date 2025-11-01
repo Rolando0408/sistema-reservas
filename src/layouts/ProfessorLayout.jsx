@@ -3,10 +3,12 @@ import React, { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header"; // 👈 1. Importa el nuevo Header
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ProfessorLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -46,6 +48,14 @@ export default function ProfessorLayout() {
         : brand;
     document.title = prefix;
   }, [currentPageTitle]);
+
+  // Cierra automáticamente el sidebar en móvil cuando cambia la ruta
+  useEffect(() => {
+    if (isMobile && !isCollapsed) {
+      setIsCollapsed(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, location.search, isMobile]);
 
   return (
     <div className="relative flex h-screen bg-background">

@@ -252,6 +252,10 @@ export default function AdminInventario() {
       <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
         <Label className="text-left sm:text-right">Nombre</Label>
         <Input
+          autoFocus
+          inputMode="text"
+          autoComplete="off"
+          onKeyDownCapture={(e) => e.stopPropagation()}
           value={form.nombre_equipo || ""}
           onChange={(e) =>
             setForm((f) => ({ ...f, nombre_equipo: e.target.value }))
@@ -304,6 +308,10 @@ export default function AdminInventario() {
       <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
         <Label className="text-left sm:text-right">Nombre</Label>
         <Input
+          autoFocus
+          inputMode="text"
+          autoComplete="off"
+          onKeyDownCapture={(e) => e.stopPropagation()}
           value={form.nombre_laptop || ""}
           onChange={(e) =>
             setForm((f) => ({ ...f, nombre_laptop: e.target.value }))
@@ -329,6 +337,10 @@ export default function AdminInventario() {
       <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
         <Label className="text-left sm:text-right">Nombre</Label>
         <Input
+          autoFocus
+          inputMode="text"
+          autoComplete="off"
+          onKeyDownCapture={(e) => e.stopPropagation()}
           value={form.nombre_extension || ""}
           onChange={(e) =>
             setForm((f) => ({ ...f, nombre_extension: e.target.value }))
@@ -687,12 +699,17 @@ export default function AdminInventario() {
 
       <Dialog
         open={open}
+        modal={false}
         onOpenChange={(v) => {
           setOpen(v);
           if (!v) resetForm();
         }}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent
+          className="sm:max-w-xl"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>
               {isEdit ? "Editar" : "Agregar"}{" "}
