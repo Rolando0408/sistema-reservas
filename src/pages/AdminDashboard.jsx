@@ -657,7 +657,12 @@ export default function AdminDashboard() {
                         </svg>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-2 w-[--radix-popover-trigger-width] min-w-[260px] max-h-80 overflow-auto overscroll-contain">
+                    <PopoverContent
+                      className="p-2 w-[--radix-popover-trigger-width] min-w-[260px] max-h-80 overflow-auto overscroll-contain"
+                      data-scroll-lock-scrollable
+                      onWheelCapture={(e) => e.stopPropagation()}
+                      onWheel={(e) => e.stopPropagation()}
+                    >
                       <div className="space-y-2">
                         <Input
                           placeholder="Buscar profesor..."
@@ -668,7 +673,10 @@ export default function AdminDashboard() {
                         />
                         <div
                           className="max-h-60 overflow-y-auto rounded-md border overscroll-contain"
+                          data-scroll-lock-scrollable
                           tabIndex={0}
+                          onWheelCapture={(e) => e.stopPropagation()}
+                          onWheel={(e) => e.stopPropagation()}
                         >
                           {(() => {
                             const term = profesorSearch.trim().toLowerCase();
@@ -856,7 +864,10 @@ export default function AdminDashboard() {
                     onValueChange={setEquipoId}
                     disabled={!requisitosCompletos}
                   >
-                    <SelectTrigger id="equipo" className="col-span-1 sm:col-span-3">
+                    <SelectTrigger
+                      id="equipo"
+                      className="col-span-1 sm:col-span-3"
+                    >
                       <SelectValue placeholder="Seleccione" />
                     </SelectTrigger>
                     <SelectContent>
@@ -902,7 +913,10 @@ export default function AdminDashboard() {
                     onValueChange={setLaptopId}
                     disabled={!requisitosCompletos}
                   >
-                    <SelectTrigger id="laptop" className="col-span-1 sm:col-span-3">
+                    <SelectTrigger
+                      id="laptop"
+                      className="col-span-1 sm:col-span-3"
+                    >
                       <SelectValue placeholder="Ninguna" />
                     </SelectTrigger>
                     <SelectContent>
@@ -949,7 +963,10 @@ export default function AdminDashboard() {
                     onValueChange={setExtensionId}
                     disabled={!requisitosCompletos}
                   >
-                    <SelectTrigger id="extension" className="col-span-1 sm:col-span-3">
+                    <SelectTrigger
+                      id="extension"
+                      className="col-span-1 sm:col-span-3"
+                    >
                       <SelectValue placeholder="Ninguna" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1027,7 +1044,9 @@ export default function AdminDashboard() {
                         disabled={!requisitosCompletos}
                       >
                         {(() => {
-                          const sel = aulas.find((x) => String(x.id) === aulaId);
+                          const sel = aulas.find(
+                            (x) => String(x.id) === aulaId
+                          );
                           return sel ? sel.nombre_aula : "Seleccione un aula";
                         })()}
                         <svg
@@ -1041,7 +1060,12 @@ export default function AdminDashboard() {
                         </svg>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-2 w-[--radix-popover-trigger-width] min-w-[260px] max-h-80 overflow-auto overscroll-contain">
+                    <PopoverContent
+                      className="p-2 w-[--radix-popover-trigger-width] min-w-[260px] max-h-80 overflow-auto overscroll-contain"
+                      data-scroll-lock-scrollable
+                      onWheelCapture={(e) => e.stopPropagation()}
+                      onWheel={(e) => e.stopPropagation()}
+                    >
                       <div className="space-y-2">
                         <Input
                           placeholder="Buscar aula..."
@@ -1051,7 +1075,13 @@ export default function AdminDashboard() {
                           className="text-black"
                           disabled={!requisitosCompletos}
                         />
-                        <div className="max-h-60 overflow-y-auto rounded-md border overscroll-contain" tabIndex={0}>
+                        <div
+                          className="max-h-60 overflow-y-auto rounded-md border overscroll-contain"
+                          data-scroll-lock-scrollable
+                          tabIndex={0}
+                          onWheelCapture={(e) => e.stopPropagation()}
+                          onWheel={(e) => e.stopPropagation()}
+                        >
                           {(() => {
                             if (!requisitosCompletos) {
                               return (
@@ -1062,11 +1092,15 @@ export default function AdminDashboard() {
                             }
                             const term = aulaSearch.trim().toLowerCase();
                             const base = aulasDisponibles || [];
-                            const list = base.filter((a) => a.nombre_aula.toLowerCase().includes(term));
+                            const list = base.filter((a) =>
+                              a.nombre_aula.toLowerCase().includes(term)
+                            );
                             if (list.length === 0) {
                               return (
                                 <div className="px-3 py-2 text-sm text-muted-foreground">
-                                  {base.length === 0 ? "No hay aulas disponibles para este horario." : "Sin resultados."}
+                                  {base.length === 0
+                                    ? "No hay aulas disponibles para este horario."
+                                    : "Sin resultados."}
                                 </div>
                               );
                             }
@@ -1087,7 +1121,12 @@ export default function AdminDashboard() {
                                 >
                                   <span>{a.nombre_aula}</span>
                                   {selected ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4 opacity-80">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      viewBox="0 0 24 24"
+                                      fill="currentColor"
+                                      className="size-4 opacity-80"
+                                    >
                                       <path d="M9 16.2l-3.5-3.5 1.4-1.4L9 13.4l7.1-7.1 1.4 1.4z" />
                                     </svg>
                                   ) : null}
