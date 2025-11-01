@@ -35,6 +35,7 @@ export default function Disponibilidad() {
   const [equipos, setEquipos] = useState([]);
   const [horarios, setHorarios] = useState([]);
   const [reservasDelDia, setReservasDelDia] = useState([]);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Carga todos los datos necesarios
   useEffect(() => {
@@ -122,38 +123,44 @@ export default function Disponibilidad() {
 
   return (
     <div className="disponibilidad-page space-y-4 px-4 py-4 sm:px-8 sm:py-6 md:px-20 md:py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="flex flex-col md:w-full sm:flex-row justify-between">
         {/* Boton de volver */}
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row items-center w-full">
           <Button variant="outline" size="icon" asChild>
             <Link to="/app/dashboard" title="Volver al Dashboard">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h2 className="text-xl font-bold tracking-tight">
+          <h2 className="text-xl font-bold tracking-tight pl-2">
             Disponibilidad General de Equipos
           </h2>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:w-auto ml-auto">
+            <p>Fecha:</p>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className="md:w-40 justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {format(fecha, "PP", { locale: es })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={fecha}
+                  onSelect={(d) => {
+                    if (d) setFecha(d);
+                    setCalendarOpen(false);
+                  }}
+                  initialFocus
+                  disabled={{ before: startOfDay(new Date()) }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className="w-full sm:w-[280px] justify-start text-left font-normal"
-            >
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              {format(fecha, "PP", { locale: es })}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <Calendar
-              mode="single"
-              selected={fecha}
-              onSelect={setFecha}
-              initialFocus
-              disabled={{ before: startOfDay(new Date()) }} // Opcional: deshabilita días pasados
-            />
-          </PopoverContent>
-        </Popover>
       </div>
 
       {loading ? (

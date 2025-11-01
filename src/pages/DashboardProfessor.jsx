@@ -72,6 +72,8 @@ export default function DashboardProfessor() {
   const [aulaId, setAulaId] = useState("");
   const [aulaOpen, setAulaOpen] = useState(false);
   const [aulaSearch, setAulaSearch] = useState("");
+  // Controla el Popover del calendario de fecha en el diálogo para cerrar al seleccionar
+  const [fechaPopoverOpen, setFechaPopoverOpen] = useState(false);
 
   const [equiposDisponibles, setEquiposDisponibles] = useState([]);
   const [laptopsDisponibles, setLaptopsDisponibles] = useState([]);
@@ -706,7 +708,10 @@ export default function DashboardProfessor() {
                 <Label htmlFor="fecha" className="text-left sm:text-right">
                   Fecha
                 </Label>
-                <Popover>
+                <Popover
+                  open={fechaPopoverOpen}
+                  onOpenChange={setFechaPopoverOpen}
+                >
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
@@ -727,7 +732,11 @@ export default function DashboardProfessor() {
                     <Calendar
                       mode="single"
                       selected={fecha}
-                      onSelect={setFecha}
+                      onSelect={(d) => {
+                        setFecha(d);
+                        // Cierra el popover al seleccionar una fecha (como en Disponibilidad)
+                        setFechaPopoverOpen(false);
+                      }}
                       initialFocus
                       disabled={{ before: startOfDay(new Date()) }}
                       className={""}
