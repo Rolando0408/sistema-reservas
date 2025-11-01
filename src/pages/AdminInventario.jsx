@@ -449,7 +449,9 @@ export default function AdminInventario() {
           </button>
           <button
             className={`flex-1 px-3 py-2 text-sm text-center ${
-              tab === "extensiones" ? "bg-[#0D4D98] text-white" : "bg-background"
+              tab === "extensiones"
+                ? "bg-[#0D4D98] text-white"
+                : "bg-background"
             }`}
             onClick={() => setTab("extensiones")}
           >
