@@ -39,6 +39,24 @@ export default function AdminLayout() {
     case "/admin/dashboard":
       currentPageTitle = "Dashboard";
       break;
+    case "/admin/historial":
+      currentPageTitle = "Historial de Reservas";
+      break;
+    case "/admin/disponibilidad":
+      currentPageTitle = "Disponibilidad";
+      break;
+    case "/admin/inventario": {
+      const sp = new URLSearchParams(location.search);
+      const tab = sp.get("tab") || "equipos";
+      const label =
+        tab === "laptops"
+          ? "Laptops"
+          : tab === "extensiones"
+          ? "Extensiones"
+          : "Proyectores";
+      currentPageTitle = `Inventario - ${label}`;
+      break;
+    }
     default:
       currentPageTitle = "Administración";
   }
@@ -48,6 +66,16 @@ export default function AdminLayout() {
     else document.body.classList.remove("overflow-hidden");
     return () => document.body.classList.remove("overflow-hidden");
   }, [isCollapsed]);
+
+  // Actualiza el título del documento según la sección del admin
+  useEffect(() => {
+    const brand = "UNIMAR Proyecta";
+    const prefix =
+      currentPageTitle && currentPageTitle !== "Administración"
+        ? `${currentPageTitle} | Admin`
+        : `${brand} | Admin`;
+    document.title = prefix;
+  }, [currentPageTitle]);
 
   return (
     <div className="relative flex h-screen bg-background">

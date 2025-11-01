@@ -23,6 +23,10 @@ export default function AdminHistorial() {
   const [mapUsuarios, setMapUsuarios] = useState({});
 
   useEffect(() => {
+    document.title = "Historial | Admin";
+  }, []);
+
+  useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);

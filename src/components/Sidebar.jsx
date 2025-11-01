@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, History, LogOut } from "lucide-react";
+import { Home, History, LogOut, Calendar } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Swal from "sweetalert2";
 import logo from "../assets/logo-3.png";
@@ -38,11 +38,12 @@ export default function Sidebar({ isCollapsed }) {
     <aside
       aria-label="Barra lateral de navegación"
       className={`shadow-sidebar-light bg-[#0D4D98] text-white flex flex-col z-40
-        transition-all duration-300 ease-in-out
-        fixed inset-y-0 left-0
-        ${isCollapsed ? "-translate-x-full" : "translate-x-0"}
-        md:relative md:translate-x-0
-        ${isCollapsed ? "md:w-16 md:px-2 md:py-4" : "md:w-22 md:p-2"}`}
+        overflow-hidden md:overflow-visible
+        transition-all duration-500 ease-in-out will-change-transform
+    fixed inset-y-0 left-0
+    ${isCollapsed ? "-translate-x-full" : "translate-x-0"}
+    md:relative md:translate-x-0
+    ${isCollapsed ? "md:w-16 md:px-2 md:py-4" : "md:w-22 md:p-2"}`}
     >
       {/* --- ENCABEZADO MODIFICADO --- */}
       <div
@@ -80,8 +81,41 @@ export default function Sidebar({ isCollapsed }) {
           title="Dashboard"
         >
           <Link to="/app/dashboard">
-            <Home className={`h-4 w-4 ${!isCollapsed && "mr-2"}`} />
-            {!isCollapsed && <span>Dashboard</span>}
+            <Home
+              className={`h-4 w-4 mr-2 ${isCollapsed ? "md:mr-0 md:ml-2" : "md:mr-2"}`}
+            />
+            <span
+              className={`inline-block transition-all duration-300 ${
+                isCollapsed
+                  ? "md:opacity-0 md:w-0 md:ml-0 md:overflow-hidden md:whitespace-nowrap"
+                  : "md:opacity-100 md:w-auto md:ml-1"
+              }`}
+            >
+              Dashboard
+            </span>
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant={isActive("/app/disponibilidad") ? "secondary" : "ghost"}
+          className={`w-full ${
+            isCollapsed ? "justify-center" : "justify-start"
+          }`}
+          title="Disponibilidad"
+        >
+          <Link to="/app/disponibilidad">
+            <Calendar
+              className={`h-4 w-4 mr-2 ${isCollapsed ? "md:mr-0 md:ml-2" : "md:mr-2"}`}
+            />
+            <span
+              className={`inline-block transition-all duration-300 ${
+                isCollapsed
+                  ? "md:opacity-0 md:w-0 md:ml-0 md:overflow-hidden md:whitespace-nowrap"
+                  : "md:opacity-100 md:w-auto md:ml-1"
+              }`}
+            >
+              Disponibilidad
+            </span>
           </Link>
         </Button>
         <Button
@@ -93,8 +127,18 @@ export default function Sidebar({ isCollapsed }) {
           title="Historial"
         >
           <Link to="/app/historial">
-            <History className={`h-4 w-4 ${!isCollapsed && "mr-2"}`} />
-            {!isCollapsed && <span>Historial</span>}
+            <History
+              className={`h-4 w-4 mr-2 ${isCollapsed ? "md:mr-0 md:ml-2" : "md:mr-2"}`}
+            />
+            <span
+              className={`inline-block transition-all duration-300 ${
+                isCollapsed
+                  ? "md:opacity-0 md:w-0 md:ml-0 md:overflow-hidden md:whitespace-nowrap"
+                  : "md:opacity-100 md:w-auto md:ml-1"
+              }`}
+            >
+              Historial
+            </span>
           </Link>
         </Button>
       </nav>
@@ -107,8 +151,18 @@ export default function Sidebar({ isCollapsed }) {
           onClick={onSignOut}
           title="Cerrar Sesión"
         >
-          <LogOut className={`h-4 w-4 ${!isCollapsed && "mr-2"}`} />{" "}
-          {!isCollapsed && <span>Cerrar Sesión</span>}{" "}
+          <LogOut
+            className={`h-4 w-4 mr-2 ${isCollapsed ? "md:mr-0 md:ml-2" : "md:mr-2"}`}
+          />
+          <span
+            className={`inline-block transition-all duration-300 ${
+              isCollapsed
+                ? "md:opacity-0 md:w-0 md:ml-0 md:overflow-hidden md:whitespace-nowrap"
+                : "md:opacity-100 md:w-auto md:ml-1"
+            }`}
+          >
+            Cerrar Sesión
+          </span>
         </Button>
       </div>
     </aside>

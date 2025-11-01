@@ -20,6 +20,9 @@ export default function ProfessorLayout() {
     case "/app/historial":
       currentPageTitle = "Historial de Reservas";
       break;
+    case "/app/disponibilidad":
+      currentPageTitle = "Disponibilidad";
+      break;
     default:
       currentPageTitle = "UNIMAR Proyecta";
   }
@@ -33,6 +36,16 @@ export default function ProfessorLayout() {
     }
     return () => document.body.classList.remove("overflow-hidden");
   }, [isCollapsed]);
+
+  // Actualiza el título del documento según la sección del profesor
+  useEffect(() => {
+    const brand = "UNIMAR Proyecta";
+    const prefix =
+      currentPageTitle && currentPageTitle !== brand
+        ? `${currentPageTitle} | Profesor`
+        : brand;
+    document.title = prefix;
+  }, [currentPageTitle]);
 
   return (
     <div className="relative flex h-screen bg-background">

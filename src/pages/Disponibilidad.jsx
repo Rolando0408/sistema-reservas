@@ -25,11 +25,13 @@ import { CalendarIcon, Loader2, ArrowLeft } from "lucide-react";
 import { format, startOfDay, set, isAfter, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz"; // Para convertir UTC a Local
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const TIME_ZONE = "America/Caracas";
 
 export default function Disponibilidad() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
   const [fecha, setFecha] = useState(startOfDay(new Date())); // Inicia con hoy
   const [loading, setLoading] = useState(true);
   const [equipos, setEquipos] = useState([]);
@@ -62,6 +64,13 @@ export default function Disponibilidad() {
 
     loadData();
   }, [fecha]); // Se ejecuta cada vez que 'fecha' cambia
+
+  // Actualiza el título de la página según el contexto (Admin vs Profesor)
+  useEffect(() => {
+    document.title = isAdmin
+      ? "Disponibilidad | Admin"
+      : "Disponibilidad | Profesor";
+  }, [isAdmin]);
 
   // --- Lógica de Disponibilidad ---
   // Memoiza el mapa de disponibilidad para no recalcular en cada render
@@ -127,7 +136,10 @@ export default function Disponibilidad() {
         {/* Boton de volver */}
         <div className="flex flex-row items-center w-full">
           <Button variant="outline" size="icon" asChild>
-            <Link to="/app/dashboard" title="Volver al Dashboard">
+            <Link
+              to={isAdmin ? "/admin/dashboard" : "/app/dashboard"}
+              title="Volver al Dashboard"
+            >
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>

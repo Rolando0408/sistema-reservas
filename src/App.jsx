@@ -11,6 +11,7 @@ import Disponibilidad from "./pages/Disponibilidad.jsx"; // <-- Importado
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminHistorial from "./pages/AdminHistorial.jsx";
+import AdminInventario from "./pages/AdminInventario.jsx";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="disponibilidad" element={<Disponibilidad />} />
           <Route path="historial" element={<AdminHistorial />} />
+          <Route path="inventario" element={<AdminInventario />} />
         </Route>
 
         {/* Fallback (atrapa cualquier ruta no definida y la envía al inicio) */}

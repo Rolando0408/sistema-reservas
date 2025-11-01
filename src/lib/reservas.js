@@ -69,6 +69,123 @@ export async function getExtensiones({ onlyDisponibles = true } = {}) {
   return data || [];
 }
 
+// ---- Inventario (CRUD básico) ----
+// Equipos (Proyectores)
+export async function createEquipo({
+  nombre_equipo,
+  hdmi = 0,
+  vga = 0,
+  estado = 1,
+}) {
+  if (!nombre_equipo || !nombre_equipo.trim())
+    throw new Error("Nombre requerido");
+  const { error } = await supabase.from("equipos").insert(
+    [
+      {
+        nombre_equipo: nombre_equipo.trim(),
+        hdmi: hdmi ? 1 : 0,
+        vga: vga ? 1 : 0,
+        estado: estado ? 1 : 0,
+      },
+    ],
+    { returning: "minimal" }
+  );
+  if (error) throw error;
+}
+
+export async function updateEquipo({ id, nombre_equipo, hdmi, vga, estado }) {
+  if (!id) throw new Error("ID requerido");
+  const payload = {};
+  if (nombre_equipo != null)
+    payload.nombre_equipo = String(nombre_equipo).trim();
+  if (hdmi != null) payload.hdmi = hdmi ? 1 : 0;
+  if (vga != null) payload.vga = vga ? 1 : 0;
+  if (estado != null) payload.estado = estado ? 1 : 0;
+  const { data, error } = await supabase
+    .from("equipos")
+    .update(payload)
+    .eq("id", id)
+    .select("id, estado");
+  if (error) throw error;
+  if (!data || data.length === 0)
+    throw new Error("No se pudo actualizar el equipo");
+}
+
+export async function deleteEquipo({ id }) {
+  if (!id) throw new Error("ID requerido");
+  const { error } = await supabase.from("equipos").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Laptops
+export async function createLaptop({ nombre_laptop, estado = 1 }) {
+  if (!nombre_laptop || !nombre_laptop.trim())
+    throw new Error("Nombre requerido");
+  const { error } = await supabase
+    .from("laptops")
+    .insert([{ nombre_laptop: nombre_laptop.trim(), estado: estado ? 1 : 0 }], {
+      returning: "minimal",
+    });
+  if (error) throw error;
+}
+
+export async function updateLaptop({ id, nombre_laptop, estado }) {
+  if (!id) throw new Error("ID requerido");
+  const payload = {};
+  if (nombre_laptop != null)
+    payload.nombre_laptop = String(nombre_laptop).trim();
+  if (estado != null) payload.estado = estado ? 1 : 0;
+  const { data, error } = await supabase
+    .from("laptops")
+    .update(payload)
+    .eq("id", id)
+    .select("id, estado");
+  if (error) throw error;
+  if (!data || data.length === 0)
+    throw new Error("No se pudo actualizar la laptop");
+}
+
+export async function deleteLaptop({ id }) {
+  if (!id) throw new Error("ID requerido");
+  const { error } = await supabase.from("laptops").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Extensiones
+export async function createExtension({ nombre_extension, estado = 1 }) {
+  if (!nombre_extension || !nombre_extension.trim())
+    throw new Error("Nombre requerido");
+  const { error } = await supabase
+    .from("extensiones")
+    .insert(
+      [{ nombre_extension: nombre_extension.trim(), estado: estado ? 1 : 0 }],
+      { returning: "minimal" }
+    );
+  if (error) throw error;
+}
+
+export async function updateExtension({ id, nombre_extension, estado }) {
+  if (!id) throw new Error("ID requerido");
+  const payload = {};
+  if (nombre_extension != null)
+    payload.nombre_extension = String(nombre_extension).trim();
+  if (estado != null) payload.estado = estado ? 1 : 0;
+  const { data, error } = await supabase
+    .from("extensiones")
+    .update(payload)
+    .eq("id", id)
+    .select("id, estado");
+  if (error) throw error;
+  if (!data || data.length === 0)
+    throw new Error("No se pudo actualizar la extensión");
+}
+
+export async function deleteExtension({ id }) {
+  if (!id) throw new Error("ID requerido");
+  const { error } = await supabase.from("extensiones").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function getHorarios() {
   const { data, error } = await supabase
     .from("horarios")
