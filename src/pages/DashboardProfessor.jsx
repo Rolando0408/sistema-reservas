@@ -1019,10 +1019,13 @@ export default function DashboardProfessor() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="p-2 w-[--radix-popover-trigger-width] min-w-[260px] max-h-80 overflow-auto overscroll-contain"
+                      className="p-2 w-[--radix-popover-trigger-width] min-w-[260px] max-h-80 overflow-auto overscroll-contain touch-pan-y"
                       data-scroll-lock-scrollable
                       onWheelCapture={(e) => e.stopPropagation()}
                       onWheel={(e) => e.stopPropagation()}
+                      onTouchStartCapture={(e) => e.stopPropagation()}
+                      onTouchMoveCapture={(e) => e.stopPropagation()}
+                      style={{ WebkitOverflowScrolling: "touch" }}
                     >
                       <div className="space-y-2">
                         <Input
@@ -1034,11 +1037,14 @@ export default function DashboardProfessor() {
                           disabled={!requisitosCompletos}
                         />
                         <div
-                          className="max-h-60 overflow-y-auto rounded-md border overscroll-contain"
+                          className="max-h-60 overflow-y-auto rounded-md border overscroll-contain touch-pan-y"
                           data-scroll-lock-scrollable
                           tabIndex={0}
                           onWheelCapture={(e) => e.stopPropagation()}
                           onWheel={(e) => e.stopPropagation()}
+                          onTouchStartCapture={(e) => e.stopPropagation()}
+                          onTouchMoveCapture={(e) => e.stopPropagation()}
+                          style={{ WebkitOverflowScrolling: "touch" }}
                         >
                           {(() => {
                             if (!requisitosCompletos) {
