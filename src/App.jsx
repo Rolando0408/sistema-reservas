@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
+import VerifyEmail from "./pages/VerifyEmail.jsx";
 import DashboardProfessor from "./pages/DashboardProfessor.jsx";
 import HistorialReservas from "./pages/HistorialReservas.jsx";
 import ProtectedRoute from "./lib/ProtectedRoute.jsx";
@@ -15,6 +16,7 @@ function App() {
         {/* Rutas Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* Rutas Protegidas (dentro del Layout) */}
@@ -32,7 +34,6 @@ function App() {
           {/* Las páginas hijas que se mostrarán dentro del Layout */}
           <Route path="dashboard" element={<DashboardProfessor />} />
           <Route path="historial" element={<HistorialReservas />} />
-
 
           <Route path="disponibilidad" element={<Disponibilidad />} />
         </Route>

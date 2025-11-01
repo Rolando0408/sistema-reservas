@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import logo from "../assets/logo-3.png";
 import {
@@ -14,6 +14,7 @@ import Swal from "sweetalert2";
 import { Loader2 } from "lucide-react";
 
 export default function Register() {
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,7 +59,8 @@ export default function Register() {
         confirmButtonText: "Entendido",
       });
 
-      window.location.href = "/"; // Redirige al login
+      // Redirige a página de verificación con el email como query param
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (error) {
       const msg = (error?.message || "").toLowerCase();
       if (
