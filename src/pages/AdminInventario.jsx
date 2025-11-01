@@ -418,26 +418,26 @@ export default function AdminInventario() {
   return (
     <div className="p-4 sm:p-6 space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="inline-flex rounded border overflow-hidden">
+        <div className="flex w-full sm:w-auto rounded border overflow-hidden">
           <button
-            className={`px-3 py-2 text-sm ${
-              tab === "equipos" ? "bg-primary text-white" : "bg-background"
+            className={`flex-1 px-3 py-2 text-sm text-center ${
+              tab === "equipos" ? "bg-[#0D4D98] text-white" : "bg-background"
             }`}
             onClick={() => setTab("equipos")}
           >
             Proyectores
           </button>
           <button
-            className={`px-3 py-2 text-sm ${
-              tab === "laptops" ? "bg-primary text-white" : "bg-background"
+            className={`flex-1 px-3 py-2 text-sm text-center ${
+              tab === "laptops" ? "bg-[#0D4D98] text-white" : "bg-background"
             }`}
             onClick={() => setTab("laptops")}
           >
             Laptops
           </button>
           <button
-            className={`px-3 py-2 text-sm ${
-              tab === "extensiones" ? "bg-primary text-white" : "bg-background"
+            className={`flex-1 px-3 py-2 text-sm text-center ${
+              tab === "extensiones" ? "bg-[#0D4D98] text-white" : "bg-background"
             }`}
             onClick={() => setTab("extensiones")}
           >
