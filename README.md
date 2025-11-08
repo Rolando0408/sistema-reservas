@@ -14,3 +14,35 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Troubleshooting on Windows (PowerShell)
+
+If you see an error like:
+
+> No se puede cargar el archivo C:\\Program Files\\nodejs\\npm.ps1 porque la ejecución de scripts está deshabilitada en este sistema
+
+PowerShell is blocking script execution. Fix it safely for your user only:
+
+1. Open PowerShell as your normal user (no admin required).
+2. Run:
+
+	```powershell
+	Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+	```
+
+3. Verify:
+
+	```powershell
+	Get-ExecutionPolicy -List
+	```
+
+	You should see `CurrentUser: RemoteSigned`.
+
+4. Try again:
+
+	```powershell
+	npm install
+	npm run dev
+	```
+
+Alternative: run commands from "Command Prompt" (cmd.exe), which uses `npm.cmd` and isn't affected by PowerShell's policy.
