@@ -17,7 +17,9 @@ import {
   cancelReserva,
   updateReserva,
   listProfesores,
-  completeReserva,
+  // completeReserva,
+  toggleEntregaReserva,
+  syncEstadosAutomaticos,
   getUsuariosByIds,
 } from "@/lib/reservas";
 import { Button } from "@/components/ui/button";
@@ -97,6 +99,8 @@ export default function AdminDashboard() {
     const load = async () => {
       try {
         setReservasLoading(true);
+        // Sincroniza estados automáticos (No-Show, Pendiente Retiro/Entrega)
+        try { await syncEstadosAutomaticos(); } catch (e) { console.warn(e); }
         const [hs, decs, aulasData, eqsAll, lapsAll, extsAll, profs, allRes] =
           await Promise.all([
             getHorarios(),
@@ -116,6 +120,9 @@ export default function AdminDashboard() {
           (allRes || []).filter(
             (r) =>
               r.estado !== ESTADOS_RESERVA.CANCELADA &&
+              r.estado !== ESTADOS_RESERVA.CANCELADA_USUARIO &&
+              r.estado !== ESTADOS_RESERVA.CANCELADA_ADMIN &&
+              r.estado !== ESTADOS_RESERVA.NO_SHOW &&
               r.estado !== ESTADOS_RESERVA.COMPLETADA
           )
         );
@@ -399,6 +406,9 @@ export default function AdminDashboard() {
         (all || []).filter(
           (r) =>
             r.estado !== ESTADOS_RESERVA.CANCELADA &&
+            r.estado !== ESTADOS_RESERVA.CANCELADA_USUARIO &&
+            r.estado !== ESTADOS_RESERVA.CANCELADA_ADMIN &&
+            r.estado !== ESTADOS_RESERVA.NO_SHOW &&
             r.estado !== ESTADOS_RESERVA.COMPLETADA
         )
       );
@@ -421,13 +431,16 @@ export default function AdminDashboard() {
 
   const onCancelRes = async (id) => {
     try {
-      await cancelReserva({ reservaId: id });
+      await cancelReserva({ reservaId: id, by: "admin" });
       await Swal.fire("Cancelada", "La reserva fue cancelada", "success");
       const all = await listReservasAll({ futuras: false });
       setReservas(
         (all || []).filter(
           (r) =>
             r.estado !== ESTADOS_RESERVA.CANCELADA &&
+            r.estado !== ESTADOS_RESERVA.CANCELADA_USUARIO &&
+            r.estado !== ESTADOS_RESERVA.CANCELADA_ADMIN &&
+            r.estado !== ESTADOS_RESERVA.NO_SHOW &&
             r.estado !== ESTADOS_RESERVA.COMPLETADA
         )
       );
@@ -442,23 +455,25 @@ export default function AdminDashboard() {
 
   const onCompleteRes = async (row) => {
     try {
-      await completeReserva({ reservaId: row.id });
-      await Swal.fire(
-        "Completada",
-        "La reserva fue marcada como Completada",
-        "success"
-      );
+      const { newEstado } = await toggleEntregaReserva({ reservaId: row.id });
+      const msg =
+        newEstado === ESTADOS_RESERVA.ENTREGADO
+          ? "Equipo entregado al profesor"
+          : "Reserva completada (equipo recibido)";
+      await Swal.fire("Listo", msg, "success");
       const all = await listReservasAll({ futuras: false });
       setReservas(
         (all || []).filter(
           (r) =>
             r.estado !== ESTADOS_RESERVA.CANCELADA &&
+            r.estado !== ESTADOS_RESERVA.CANCELADA_USUARIO &&
+            r.estado !== ESTADOS_RESERVA.CANCELADA_ADMIN &&
             r.estado !== ESTADOS_RESERVA.COMPLETADA
         )
       );
     } catch (err) {
       await Swal.fire(
-        "No se pudo marcar",
+        "No se pudo actualizar",
         err.message || "Intenta nuevamente",
         "error"
       );

@@ -12,14 +12,30 @@ export const ESTADOS_RESERVA = {
   ACTIVA: 1,
   CANCELADA: 2,
   COMPLETADA: 3,
+  // Estados adicionales más específicos
+  CANCELADA_USUARIO: 4,
+  CANCELADA_ADMIN: 5,
+  NO_SHOW: 6,
+  EXPIRADA: 7,
+  PENDIENTE_RETIRO: 8,
+  ENTREGADO: 9,
+  PENDIENTE_ENTREGA: 10,
 };
 
 // Estados que bloquean recursos mientras el rango horario se solapa
-const ESTADOS_BLOQUEAN = [ESTADOS_RESERVA.RESERVADO, ESTADOS_RESERVA.ACTIVA];
+const ESTADOS_BLOQUEAN = [
+  ESTADOS_RESERVA.RESERVADO,
+  ESTADOS_RESERVA.ACTIVA, // legado
+  ESTADOS_RESERVA.PENDIENTE_RETIRO,
+  ESTADOS_RESERVA.ENTREGADO,
+  ESTADOS_RESERVA.PENDIENTE_ENTREGA,
+];
 
 // Zona horaria de Venezuela para las conversiones
 const TIME_ZONE = "America/Caracas";
 export const MAX_RESERVA_ANTICIPACION_DIAS = 10;
+export const NO_SHOW_GRACE_MINUTES = 20; // minutos después del inicio sin entrega
+export const EARLY_DELIVERY_MINUTES = 10; // minutos antes del inicio permitidos para entregar
 
 // No necesitamos toCaracasISO ni TZ_OFFSET
 // export function toCaracasISO(dateYYYYMMDD, timeHHMMSS) { ... }
@@ -663,7 +679,7 @@ export async function createReservaForUser({
 }
 
 // Cancelar reserva (Sin cambios, ya que compara fechas ISO)
-export async function cancelReserva({ reservaId }) {
+export async function cancelReserva({ reservaId, by = "user" }) {
   const { data, error } = await supabase
     .from("reservas")
     .select("fecha_hora_fin, estado")
@@ -680,9 +696,160 @@ export async function cancelReserva({ reservaId }) {
 
   const { error: upErr } = await supabase
     .from("reservas")
-    .update({ estado: ESTADOS_RESERVA.CANCELADA })
+    .update({
+      estado:
+        by === "admin"
+          ? ESTADOS_RESERVA.CANCELADA_ADMIN
+          : ESTADOS_RESERVA.CANCELADA_USUARIO,
+    })
     .eq("id", reservaId);
   if (upErr) throw upErr;
+}
+
+// Sincroniza automáticamente el estado de una reserva según las horas y el ahora
+export async function syncEstadoReserva({ reservaId }) {
+  const { data, error } = await supabase
+    .from("reservas")
+    .select("id, fecha_hora_inicio, fecha_hora_fin, estado")
+    .eq("id", reservaId)
+    .single();
+  if (error) throw error;
+  const { fecha_hora_inicio, fecha_hora_fin, estado } = data;
+  const ahora = new Date();
+  const inicio = new Date(fecha_hora_inicio);
+  const fin = new Date(fecha_hora_fin);
+  const inicioMasGracia = new Date(inicio.getTime() + NO_SHOW_GRACE_MINUTES * 60 * 1000);
+
+  // Estados terminales: no cambiar
+  const terminales = [
+    ESTADOS_RESERVA.CANCELADA,
+    ESTADOS_RESERVA.CANCELADA_USUARIO,
+    ESTADOS_RESERVA.CANCELADA_ADMIN,
+    ESTADOS_RESERVA.NO_SHOW,
+    ESTADOS_RESERVA.COMPLETADA,
+    ESTADOS_RESERVA.EXPIRADA,
+  ];
+  if (terminales.includes(estado)) return estado;
+
+  // Si llegó la hora de inicio y aún no se ha entregado: Pendiente de retiro
+  if (ahora >= inicio && ahora < inicioMasGracia && estado !== ESTADOS_RESERVA.ENTREGADO) {
+    if (estado !== ESTADOS_RESERVA.PENDIENTE_RETIRO) {
+      const { error: upErr } = await supabase
+        .from("reservas")
+        .update({ estado: ESTADOS_RESERVA.PENDIENTE_RETIRO })
+        .eq("id", reservaId);
+      if (upErr) throw upErr;
+      return ESTADOS_RESERVA.PENDIENTE_RETIRO;
+    }
+    return estado;
+  }
+
+  // Si pasaron NO_SHOW_GRACE_MINUTES y no se entregó: No-Show
+  if (ahora >= inicioMasGracia && estado !== ESTADOS_RESERVA.ENTREGADO) {
+    const { error: upErr } = await supabase
+      .from("reservas")
+      .update({ estado: ESTADOS_RESERVA.NO_SHOW })
+      .eq("id", reservaId);
+    if (upErr) throw upErr;
+    return ESTADOS_RESERVA.NO_SHOW;
+  }
+
+  // Si ya pasó la hora de fin y estaba entregado: Pendiente de entrega
+  if (ahora >= fin && estado === ESTADOS_RESERVA.ENTREGADO) {
+    const { error: upErr } = await supabase
+      .from("reservas")
+      .update({ estado: ESTADOS_RESERVA.PENDIENTE_ENTREGA })
+      .eq("id", reservaId);
+    if (upErr) throw upErr;
+    return ESTADOS_RESERVA.PENDIENTE_ENTREGA;
+  }
+
+  return estado;
+}
+
+// Sincroniza en lote reservas “activas” en torno al tiempo actual
+export async function syncEstadosAutomaticos() {
+  const nowIso = nowISO();
+  // Trae reservas no terminadas o cercanas al inicio
+  const { data, error } = await supabase
+    .from("reservas")
+    .select("id, fecha_hora_inicio, fecha_hora_fin, estado")
+    .gte("fecha_hora_fin", nowIso);
+  if (error) throw error;
+  for (const r of data || []) {
+    try {
+      // Ignora terminales para minimizar I/O
+      if (
+        [
+          ESTADOS_RESERVA.CANCELADA,
+          ESTADOS_RESERVA.CANCELADA_USUARIO,
+          ESTADOS_RESERVA.CANCELADA_ADMIN,
+          ESTADOS_RESERVA.NO_SHOW,
+          ESTADOS_RESERVA.COMPLETADA,
+          ESTADOS_RESERVA.EXPIRADA,
+        ].includes(r.estado)
+      )
+        continue;
+      await syncEstadoReserva({ reservaId: r.id });
+    } catch (e) {
+      // continúa con las demás
+      console.error("syncEstadosAutomaticos error", e);
+    }
+  }
+}
+
+// Botón único: entregar al inicio o recibir al final
+export async function toggleEntregaReserva({ reservaId }) {
+  const { data, error } = await supabase
+    .from("reservas")
+    .select("id, fecha_hora_inicio, fecha_hora_fin, estado")
+    .eq("id", reservaId)
+    .single();
+  if (error) throw error;
+  const { fecha_hora_inicio, fecha_hora_fin, estado } = data;
+  const ahora = new Date();
+  const inicio = new Date(fecha_hora_inicio);
+  const fin = new Date(fecha_hora_fin);
+
+  // Si ya está cancelada/completada/no show -> bloqueo
+  if (
+    [
+      ESTADOS_RESERVA.CANCELADA,
+      ESTADOS_RESERVA.CANCELADA_USUARIO,
+      ESTADOS_RESERVA.CANCELADA_ADMIN,
+      ESTADOS_RESERVA.NO_SHOW,
+      ESTADOS_RESERVA.COMPLETADA,
+      ESTADOS_RESERVA.EXPIRADA,
+    ].includes(estado)
+  )
+    throw new Error("La reserva no permite cambios de entrega");
+
+  // Si aún no se ha entregado y estamos cerca del inicio o después
+  const inicioMenos = new Date(inicio.getTime() - EARLY_DELIVERY_MINUTES * 60 * 1000);
+  if (estado !== ESTADOS_RESERVA.ENTREGADO && ahora >= inicioMenos && ahora <= fin) {
+    const { error: upErr } = await supabase
+      .from("reservas")
+      .update({ estado: ESTADOS_RESERVA.ENTREGADO })
+      .eq("id", reservaId)
+      .select("estado");
+    if (upErr) throw upErr;
+    return { newEstado: ESTADOS_RESERVA.ENTREGADO };
+  }
+
+  // Si ya pasó la hora de fin o está en pendiente de entrega, completar
+  if (ahora >= fin || estado === ESTADOS_RESERVA.PENDIENTE_ENTREGA || estado === ESTADOS_RESERVA.ENTREGADO) {
+    const { error: upErr } = await supabase
+      .from("reservas")
+      .update({ estado: ESTADOS_RESERVA.COMPLETADA })
+      .eq("id", reservaId)
+      .select("estado");
+    if (upErr) throw upErr;
+    return { newEstado: ESTADOS_RESERVA.COMPLETADA };
+  }
+
+  // Caso contrario, hacer sync y devolver estado actual
+  const s = await syncEstadoReserva({ reservaId });
+  return { newEstado: s };
 }
 
 // Marcar una reserva como completada (solo admins deberían usarlo en UI)

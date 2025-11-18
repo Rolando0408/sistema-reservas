@@ -29,11 +29,15 @@ export default function HistorialReservas() {
 
         const todasMisReservas = await listMisReservas({ futuras: false });
 
-        // Historial: solo Canceladas o Completadas
-        const historial = (todasMisReservas || []).filter(
-          (r) =>
-            r.estado === ESTADOS_RESERVA.CANCELADA ||
-            r.estado === ESTADOS_RESERVA.COMPLETADA
+        // Historial: solo canceladas (cualquier tipo) o completadas
+        const historial = (todasMisReservas || []).filter((r) =>
+          [
+            ESTADOS_RESERVA.CANCELADA,
+            ESTADOS_RESERVA.CANCELADA_USUARIO,
+            ESTADOS_RESERVA.CANCELADA_ADMIN,
+            ESTADOS_RESERVA.NO_SHOW,
+            ESTADOS_RESERVA.COMPLETADA,
+          ].includes(r.estado)
         );
 
         setHistorialReservas(historial);

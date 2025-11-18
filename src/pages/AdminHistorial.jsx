@@ -40,10 +40,14 @@ export default function AdminHistorial() {
             listReservasAll({ futuras: false }),
           ]);
 
-        const historicas = (allRes || []).filter(
-          (r) =>
-            r.estado === ESTADOS_RESERVA.CANCELADA ||
-            r.estado === ESTADOS_RESERVA.COMPLETADA
+        const historicas = (allRes || []).filter((r) =>
+          [
+            ESTADOS_RESERVA.CANCELADA,
+            ESTADOS_RESERVA.CANCELADA_USUARIO,
+            ESTADOS_RESERVA.CANCELADA_ADMIN,
+            ESTADOS_RESERVA.NO_SHOW,
+            ESTADOS_RESERVA.COMPLETADA,
+          ].includes(r.estado)
         );
         setReservas(historicas);
 

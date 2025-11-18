@@ -17,6 +17,7 @@ import {
   createReserva,
   cancelReserva,
   updateReserva,
+  syncEstadosAutomaticos,
 } from "../lib/reservas";
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate, Link } from "react-router-dom";
@@ -119,6 +120,7 @@ export default function DashboardProfessor() {
       try {
         setLoading(true);
         setReservasLoading(true);
+        try { await syncEstadosAutomaticos(); } catch (e) { console.warn(e); }
 
         const [hs, decs, aulasData, mis, eqsAll, lapsAll, extsAll] =
           await Promise.all([
@@ -138,6 +140,9 @@ export default function DashboardProfessor() {
           (mis || []).filter(
             (r) =>
               r.estado !== ESTADOS_RESERVA.CANCELADA &&
+              r.estado !== ESTADOS_RESERVA.CANCELADA_USUARIO &&
+              r.estado !== ESTADOS_RESERVA.CANCELADA_ADMIN &&
+              r.estado !== ESTADOS_RESERVA.NO_SHOW &&
               r.estado !== ESTADOS_RESERVA.COMPLETADA
           )
         );
@@ -437,7 +442,10 @@ export default function DashboardProfessor() {
         (mis || []).filter(
           (r) =>
             r.estado !== ESTADOS_RESERVA.CANCELADA &&
-            r.estado !== ESTADOS_RESERVA.COMPLETADA
+            r.estado !== ESTADOS_RESERVA.CANCELADA_USUARIO &&
+            r.estado !== ESTADOS_RESERVA.CANCELADA_ADMIN &&
+              r.estado !== ESTADOS_RESERVA.NO_SHOW &&
+              r.estado !== ESTADOS_RESERVA.COMPLETADA
         )
       );
       return true; // Indica éxito para que el footer cierre el modal
@@ -467,7 +475,10 @@ export default function DashboardProfessor() {
         (mis || []).filter(
           (r) =>
             r.estado !== ESTADOS_RESERVA.CANCELADA &&
-            r.estado !== ESTADOS_RESERVA.COMPLETADA
+            r.estado !== ESTADOS_RESERVA.CANCELADA_USUARIO &&
+            r.estado !== ESTADOS_RESERVA.CANCELADA_ADMIN &&
+              r.estado !== ESTADOS_RESERVA.NO_SHOW &&
+              r.estado !== ESTADOS_RESERVA.COMPLETADA
         )
       );
     } catch (err) {
