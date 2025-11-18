@@ -383,9 +383,13 @@ export default function ReservationsTable({
                 <button
                   className="dt-icon-btn dt-icon-btn--danger"
                   onClick={async () => {
+                    let nextMsg = "Se intentará actualizar el estado.";
+                    if (row?.estado === 0) nextMsg = "La reserva pasará a Pendiente de Retiro.";
+                    else if (row?.estado === 8 || row?.estado === 1) nextMsg = "La reserva pasará a Entregado.";
+                    else if (row?.estado === 9 || row?.estado === 10) nextMsg = "La reserva pasará a Completada.";
                     const result = await Swal.fire({
-                      title: "¿Marcar como entregada?",
-                      text: "La reserva pasará a Completada.",
+                      title: "¿Confirmar cambio de estado?",
+                      text: nextMsg,
                       icon: "question",
                       showCancelButton: true,
                       confirmButtonText: "Sí, marcar",
@@ -692,9 +696,13 @@ export default function ReservationsTable({
                       <button
                         className="dt-icon-btn dt-icon-btn--danger"
                         onClick={async () => {
+                          let nextMsg = "Se intentará actualizar el estado.";
+                          if (r?.estado === 0) nextMsg = "La reserva pasará a Pendiente de Retiro.";
+                          else if (r?.estado === 8 || r?.estado === 1) nextMsg = "La reserva pasará a Entregado.";
+                          else if (r?.estado === 9 || r?.estado === 10) nextMsg = "La reserva pasará a Completada.";
                           const result = await Swal.fire({
-                            title: "¿Marcar como entregada?",
-                            text: "La reserva pasará a Completada.",
+                            title: "¿Confirmar cambio de estado?",
+                            text: nextMsg,
                             icon: "question",
                             showCancelButton: true,
                             confirmButtonText: "Sí, marcar",

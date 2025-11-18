@@ -432,7 +432,11 @@ export default function AdminDashboard() {
   const onCancelRes = async (id) => {
     try {
       await cancelReserva({ reservaId: id, by: "admin" });
-      await Swal.fire("Cancelada", "La reserva fue cancelada", "success");
+      await Swal.fire(
+        "Cancelada",
+        "La reserva fue cancelada por el administrador",
+        "success"
+      );
       const all = await listReservasAll({ futuras: false });
       setReservas(
         (all || []).filter(
@@ -456,10 +460,13 @@ export default function AdminDashboard() {
   const onCompleteRes = async (row) => {
     try {
       const { newEstado } = await toggleEntregaReserva({ reservaId: row.id });
-      const msg =
-        newEstado === ESTADOS_RESERVA.ENTREGADO
-          ? "Equipo entregado al profesor"
-          : "Reserva completada (equipo recibido)";
+      let msg = "Estado actualizado";
+      if (newEstado === ESTADOS_RESERVA.PENDIENTE_RETIRO)
+        msg = "Marcada como Pendiente de Retiro";
+      else if (newEstado === ESTADOS_RESERVA.ENTREGADO)
+        msg = "Equipo entregado al profesor";
+      else if (newEstado === ESTADOS_RESERVA.COMPLETADA)
+        msg = "Reserva completada (equipo recibido)";
       await Swal.fire("Listo", msg, "success");
       const all = await listReservasAll({ futuras: false });
       setReservas(
@@ -468,6 +475,7 @@ export default function AdminDashboard() {
             r.estado !== ESTADOS_RESERVA.CANCELADA &&
             r.estado !== ESTADOS_RESERVA.CANCELADA_USUARIO &&
             r.estado !== ESTADOS_RESERVA.CANCELADA_ADMIN &&
+            r.estado !== ESTADOS_RESERVA.NO_SHOW &&
             r.estado !== ESTADOS_RESERVA.COMPLETADA
         )
       );

@@ -806,12 +806,9 @@ export async function toggleEntregaReserva({ reservaId }) {
     .eq("id", reservaId)
     .single();
   if (error) throw error;
-  const { fecha_hora_inicio, fecha_hora_fin, estado } = data;
-  const ahora = new Date();
-  const inicio = new Date(fecha_hora_inicio);
-  const fin = new Date(fecha_hora_fin);
+  const { estado } = data;
 
-  // Si ya está cancelada/completada/no show -> bloqueo
+  // Estados terminales o invalidos para transición
   if (
     [
       ESTADOS_RESERVA.CANCELADA,
@@ -821,35 +818,36 @@ export async function toggleEntregaReserva({ reservaId }) {
       ESTADOS_RESERVA.COMPLETADA,
       ESTADOS_RESERVA.EXPIRADA,
     ].includes(estado)
-  )
-    throw new Error("La reserva no permite cambios de entrega");
-
-  // Si aún no se ha entregado y estamos cerca del inicio o después
-  const inicioMenos = new Date(inicio.getTime() - EARLY_DELIVERY_MINUTES * 60 * 1000);
-  if (estado !== ESTADOS_RESERVA.ENTREGADO && ahora >= inicioMenos && ahora <= fin) {
-    const { error: upErr } = await supabase
-      .from("reservas")
-      .update({ estado: ESTADOS_RESERVA.ENTREGADO })
-      .eq("id", reservaId)
-      .select("estado");
-    if (upErr) throw upErr;
-    return { newEstado: ESTADOS_RESERVA.ENTREGADO };
+  ) {
+    throw new Error("La reserva no permite más cambios");
   }
 
-  // Si ya pasó la hora de fin o está en pendiente de entrega, completar
-  if (ahora >= fin || estado === ESTADOS_RESERVA.PENDIENTE_ENTREGA || estado === ESTADOS_RESERVA.ENTREGADO) {
-    const { error: upErr } = await supabase
-      .from("reservas")
-      .update({ estado: ESTADOS_RESERVA.COMPLETADA })
-      .eq("id", reservaId)
-      .select("estado");
-    if (upErr) throw upErr;
-    return { newEstado: ESTADOS_RESERVA.COMPLETADA };
+  // Máquina de estados con botón único:
+  // RESERVADO -> PENDIENTE_RETIRO -> ENTREGADO -> (o PENDIENTE_ENTREGA) -> COMPLETADA
+  let next = null;
+  if (estado === ESTADOS_RESERVA.RESERVADO) {
+    next = ESTADOS_RESERVA.PENDIENTE_RETIRO;
+  } else if (estado === ESTADOS_RESERVA.PENDIENTE_RETIRO || estado === ESTADOS_RESERVA.ACTIVA) {
+    // ACTIVA (legado) la tratamos como paso previo a ENTREGADO
+    next = ESTADOS_RESERVA.ENTREGADO;
+  } else if (
+    estado === ESTADOS_RESERVA.ENTREGADO ||
+    estado === ESTADOS_RESERVA.PENDIENTE_ENTREGA
+  ) {
+    next = ESTADOS_RESERVA.COMPLETADA;
+  } else {
+    // Cualquier otro no contemplado: intentar sincronizar y no cambiar
+    const s = await syncEstadoReserva({ reservaId });
+    return { newEstado: s };
   }
 
-  // Caso contrario, hacer sync y devolver estado actual
-  const s = await syncEstadoReserva({ reservaId });
-  return { newEstado: s };
+  const { error: upErr } = await supabase
+    .from("reservas")
+    .update({ estado: next })
+    .eq("id", reservaId)
+    .select("estado");
+  if (upErr) throw upErr;
+  return { newEstado: next };
 }
 
 // Marcar una reserva como completada (solo admins deberían usarlo en UI)
