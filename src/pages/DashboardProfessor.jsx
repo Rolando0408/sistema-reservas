@@ -46,7 +46,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format, startOfDay, isToday, set } from "date-fns"; // 'parse' ya no es necesario aquí
+import { format, startOfDay, isToday, set, addDays } from "date-fns"; // 'parse' ya no es necesario aquí
 import { es } from "date-fns/locale";
 import ReservationsTable from "../components/ReservationsTable";
 import { Loader2 } from "lucide-react";
@@ -775,10 +775,13 @@ export default function DashboardProfessor() {
                       initialFocus
                       // Deshabilita fechas pasadas y fines de semana (sábado y domingo)
                       disabled={(date) => {
-                        const isPast = date < startOfDay(new Date());
+                        const todayStart = startOfDay(new Date());
+                        const isPast = date < todayStart;
                         const dow = date.getDay();
                         const isWeekend = dow === 0 || dow === 6;
-                        return isPast || isWeekend;
+                        const maxDate = addDays(todayStart, 10);
+                        const isBeyond = date > maxDate; // inclusive del día 10
+                        return isPast || isWeekend || isBeyond;
                       }}
                       className={""}
                     />

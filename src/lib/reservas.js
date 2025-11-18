@@ -19,6 +19,7 @@ const ESTADOS_BLOQUEAN = [ESTADOS_RESERVA.RESERVADO, ESTADOS_RESERVA.ACTIVA];
 
 // Zona horaria de Venezuela para las conversiones
 const TIME_ZONE = "America/Caracas";
+export const MAX_RESERVA_ANTICIPACION_DIAS = 10;
 
 // No necesitamos toCaracasISO ni TZ_OFFSET
 // export function toCaracasISO(dateYYYYMMDD, timeHHMMSS) { ... }
@@ -545,6 +546,15 @@ export async function createReserva({
   const startISO_UTC = startUTC.toISOString();
   const endISO_UTC = endUTC.toISOString();
 
+  // Validación: máximo 10 días de antelación
+  const now = new Date();
+  const maxAdvanceMs = MAX_RESERVA_ANTICIPACION_DIAS * 24 * 60 * 60 * 1000;
+  if (startUTC.getTime() - now.getTime() > maxAdvanceMs) {
+    throw new Error(
+      `No se permiten reservas con más de ${MAX_RESERVA_ANTICIPACION_DIAS} días de antelación`
+    );
+  }
+
   if (endUTC <= startUTC) {
     // Compara en UTC
     throw new Error("La hora de fin debe ser mayor a la de inicio");
@@ -606,6 +616,15 @@ export async function createReservaForUser({
   const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
   const startISO_UTC = startUTC.toISOString();
   const endISO_UTC = endUTC.toISOString();
+
+  // Validación: máximo 10 días de antelación
+  const now = new Date();
+  const maxAdvanceMs = MAX_RESERVA_ANTICIPACION_DIAS * 24 * 60 * 60 * 1000;
+  if (startUTC.getTime() - now.getTime() > maxAdvanceMs) {
+    throw new Error(
+      `No se permiten reservas con más de ${MAX_RESERVA_ANTICIPACION_DIAS} días de antelación`
+    );
+  }
 
   if (endUTC <= startUTC) {
     throw new Error("La hora de fin debe ser mayor a la de inicio");
@@ -714,6 +733,15 @@ export async function updateReserva({
   const endUTC = getUTCDateTime(dateYYYYMMDD, horaFin);
   const startISO_UTC = startUTC.toISOString();
   const endISO_UTC = endUTC.toISOString();
+
+  // Validación: máximo 10 días de antelación también al reprogramar
+  const now = new Date();
+  const maxAdvanceMs = MAX_RESERVA_ANTICIPACION_DIAS * 24 * 60 * 60 * 1000;
+  if (startUTC.getTime() - now.getTime() > maxAdvanceMs) {
+    throw new Error(
+      `No se permiten reservas con más de ${MAX_RESERVA_ANTICIPACION_DIAS} días de antelación`
+    );
+  }
 
   if (endUTC <= startUTC) {
     throw new Error("La hora de fin debe ser mayor a la de inicio");

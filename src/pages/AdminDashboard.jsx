@@ -45,7 +45,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { format, startOfDay, isToday } from "date-fns";
+import { format, startOfDay, isToday, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import ReservationsTable from "@/components/ReservationsTable";
 
@@ -777,10 +777,13 @@ export default function AdminDashboard() {
                       }}
                       initialFocus
                       disabled={(date) => {
-                        const isPast = date < startOfDay(new Date());
+                        const todayStart = startOfDay(new Date());
+                        const isPast = date < todayStart;
                         const dow = date.getDay();
                         const isWeekend = dow === 0 || dow === 6;
-                        return isPast || isWeekend;
+                        const maxDate = addDays(todayStart, 10);
+                        const isBeyond = date > maxDate;
+                        return isPast || isWeekend || isBeyond;
                       }}
                     />
                   </PopoverContent>

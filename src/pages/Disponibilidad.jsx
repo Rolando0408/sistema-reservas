@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, Loader2, ArrowLeft } from "lucide-react";
-import { format, startOfDay, set, isAfter, isBefore } from "date-fns";
+import { format, startOfDay, set, isAfter, isBefore, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz"; // Para convertir UTC a Local
 import { Link, useLocation } from "react-router-dom";
@@ -169,10 +169,13 @@ export default function Disponibilidad() {
                   initialFocus
                   // Deshabilita fechas pasadas y fines de semana (sábado y domingo)
                   disabled={(date) => {
-                    const isPast = date < startOfDay(new Date());
+                    const todayStart = startOfDay(new Date());
+                    const isPast = date < todayStart;
                     const dow = date.getDay();
                     const isWeekend = dow === 0 || dow === 6; // 0=Domingo, 6=Sábado
-                    return isPast || isWeekend;
+                    const maxDate = addDays(todayStart, 10);
+                    const isBeyond = date > maxDate; // Permite inclusive el día 10
+                    return isPast || isWeekend || isBeyond;
                   }}
                 />
               </PopoverContent>
