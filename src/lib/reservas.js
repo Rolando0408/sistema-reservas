@@ -770,11 +770,11 @@ export async function syncEstadoReserva({ reservaId }) {
 // Sincroniza en lote reservas “activas” en torno al tiempo actual
 export async function syncEstadosAutomaticos() {
   const nowIso = nowISO();
-  // Trae reservas no terminadas o cercanas al inicio
+  // Trae reservas (sin limitar por fecha fin) para permitir actualizar
+  // casos donde ya pasó la hora de fin (p.ej. ENTREGADO -> PENDIENTE_ENTREGA).
   const { data, error } = await supabase
     .from("reservas")
-    .select("id, fecha_hora_inicio, fecha_hora_fin, estado")
-    .gte("fecha_hora_fin", nowIso);
+    .select("id, fecha_hora_inicio, fecha_hora_fin, estado");
   if (error) throw error;
   for (const r of data || []) {
     try {
