@@ -30,7 +30,6 @@ body {
   width: 90%;
 }
 
-/* Alinear el contenedor de DataTables con el header */
 .lista-reservas .dataTables_wrapper {
   margin: 0;
 }

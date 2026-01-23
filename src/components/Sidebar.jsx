@@ -1,4 +1,3 @@
-// src/components/Sidebar.jsx
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,33 +44,27 @@ export default function Sidebar({ isCollapsed }) {
     md:relative md:translate-x-0
     ${isCollapsed ? "md:w-16 md:px-2 md:py-4" : "md:w-22 md:p-2"}`}
     >
-      {/* --- ENCABEZADO MODIFICADO --- */}
       <div
         className={`mb-6 flex items-center ${
           isCollapsed ? "justify-center" : "justify-between"
         }`}
       >
         {isCollapsed ? (
-          // Muestra logo simple si está colapsado
           <img
             src={logo}
             alt="UNIMAR"
             className="h-8 w-auto transition-all duration-500 ease-in-out"
-          /> // Ajusta tamaño h-8
+          />
         ) : (
-          // Muestra logo largo si está expandido
           <img
             src={logo2}
             alt="UNIMAR Proyecta"
             className="h-12 w-auto transition-all duration-500 ease-in-out px-10 mt-5"
-          /> // Ajusta tamaño h-10
+          />
         )}
       </div>
-      {/* --- FIN ENCABEZADO MODIFICADO --- */}
 
-      {/* Navegación (sin cambios) */}
       <nav className="flex flex-col space-y-2">
-        {/* ... (Tus botones Link/Button) ... */}
         <Button
           asChild
           variant={isActive("/app/dashboard") ? "secondary" : "ghost"}
@@ -144,10 +137,10 @@ export default function Sidebar({ isCollapsed }) {
       </nav>
       <div className="mt-auto">
         <Button
-          variant="ghost" // Mismo 'variant' que los otros botones
+          variant="ghost"
           className={`w-full mb-2 ${
             isCollapsed ? "justify-center" : "justify-start"
-          }`} // Mismo ajuste de justificación
+          }`}
           onClick={onSignOut}
           title="Cerrar Sesión"
         >

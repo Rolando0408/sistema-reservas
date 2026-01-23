@@ -7,23 +7,22 @@ import DashboardProfessor from "./pages/DashboardProfessor.jsx";
 import HistorialReservas from "./pages/HistorialReservas.jsx";
 import ProtectedRoute from "./lib/ProtectedRoute.jsx";
 import ProfessorLayout from "./layouts/ProfessorLayout.jsx";
-import Disponibilidad from "./pages/Disponibilidad.jsx"; // <-- Importado
+import Disponibilidad from "./pages/Disponibilidad.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminHistorial from "./pages/AdminHistorial.jsx";
 import AdminInventario from "./pages/AdminInventario.jsx";
+import AdminReportes from "./pages/AdminReportes.jsx";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rutas Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
-        {/* Rutas Protegidas (dentro del Layout) */}
         <Route
           path="/app"
           element={
@@ -32,17 +31,14 @@ function App() {
             </ProtectedRoute>
           }
         >
-          {/* La ruta índice (si solo pones /app, te lleva al dashboard) */}
           <Route index element={<Navigate to="/app/dashboard" replace />} />
 
-          {/* Las páginas hijas que se mostrarán dentro del Layout */}
           <Route path="dashboard" element={<DashboardProfessor />} />
           <Route path="historial" element={<HistorialReservas />} />
 
           <Route path="disponibilidad" element={<Disponibilidad />} />
         </Route>
 
-        {/* Rutas de Admin */}
         <Route
           path="/admin"
           element={
@@ -56,9 +52,9 @@ function App() {
           <Route path="disponibilidad" element={<Disponibilidad />} />
           <Route path="historial" element={<AdminHistorial />} />
           <Route path="inventario" element={<AdminInventario />} />
+          <Route path="reportes" element={<AdminReportes />} />
         </Route>
 
-        {/* Fallback (atrapa cualquier ruta no definida y la envía al inicio) */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

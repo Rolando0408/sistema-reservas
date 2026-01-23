@@ -128,13 +128,11 @@ export default function ReservationsTable({
     return `${hh}:${min}`;
   };
 
-  // Deriva el estado visible según tiempo y estado guardado
   const deriveEstado = (row) => {
     const now = new Date();
     const start = new Date(row.fecha_hora_inicio);
     const end = new Date(row.fecha_hora_fin);
     const stored = row.estado;
-    // Estados persistidos (códigos de ESTADOS_RESERVA)
     if (stored === 2)
       return { label: "Cancelada", className: "estado-cancelada" };
     if (stored === 3)
@@ -153,7 +151,6 @@ export default function ReservationsTable({
       return { label: "Entregado", className: "estado-activa" };
     if (stored === 10)
       return { label: "Pend. entrega", className: "estado-pendiente" };
-    // Dinámico por tiempo, fallback
     if (now < start)
       return { label: "Reservado", className: "estado-reservado" };
     if (now >= start && now <= end)
@@ -499,7 +496,6 @@ export default function ReservationsTable({
         </div>
       </div>
 
-      {/* Vista de tarjetas para móviles */}
       <div className="block sm:hidden space-y-3">
         {table.getRowModel().rows.length === 0 ? (
           <div className="rounded-md border p-4 text-center text-gray-500">
@@ -508,7 +504,6 @@ export default function ReservationsTable({
         ) : (
           table.getRowModel().rows.map((row) => {
             const r = row.original;
-            // Construye pills de equipamiento (similar a la celda de tabla)
             const pills = [];
             const added = new Set();
             if (r.id_equipo != null) {

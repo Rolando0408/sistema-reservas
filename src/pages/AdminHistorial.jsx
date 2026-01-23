@@ -80,7 +80,6 @@ export default function AdminHistorial() {
           }, {})
         );
 
-        // Construir mapa de usuarios desde ids presentes; fallback a lista de profesores
         const idsPresentes = Array.from(
           new Set((historicas || []).map((r) => r.id_usuario).filter(Boolean))
         );

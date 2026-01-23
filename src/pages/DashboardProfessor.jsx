@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import "./DashboardProfessor.css"; // Se mantiene para el layout general del dashboard
+import "./DashboardProfessor.css";
 import {
   ESTADOS_RESERVA,
   getHorarios,
@@ -31,7 +31,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-// import { Input } from "@/components/ui/input"; // No longer used
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -47,7 +46,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format, startOfDay, isToday, set, addDays } from "date-fns"; // 'parse' ya no es necesario aquí
+import { format, startOfDay, isToday, set, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import ReservationsTable from "../components/ReservationsTable";
 import { Loader2 } from "lucide-react";
@@ -61,20 +60,18 @@ export default function DashboardProfessor() {
   const [reservasLoading, setReservasLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
-  // Form crear reserva (Estado ajustado a strings para Select)
-  const [fecha, setFecha] = useState(); // Objeto Date
+  const [fecha, setFecha] = useState();
   const [horaInicioId, setHoraInicioId] = useState("");
   const [horaFinId, setHoraFinId] = useState("");
   const [connectionType, setConnectionType] = useState("");
   const [equipoId, setEquipoId] = useState("");
-  const [laptopId, setLaptopId] = useState("none"); // Usa 'none' para opcional
+  const [laptopId, setLaptopId] = useState("none");
   const [extensionId, setExtensionId] = useState("none");
   const [decanatoId, setDecanatoId] = useState("none");
   const [aulas, setAulas] = useState([]);
   const [aulaId, setAulaId] = useState("");
   const [aulaOpen, setAulaOpen] = useState(false);
   const [aulaSearch, setAulaSearch] = useState("");
-  // Controla el Popover del calendario de fecha en el diálogo para cerrar al seleccionar
   const [fechaPopoverOpen, setFechaPopoverOpen] = useState(false);
 
   const [equiposDisponibles, setEquiposDisponibles] = useState([]);
@@ -92,7 +89,6 @@ export default function DashboardProfessor() {
   const [mapAulas, setMapAulas] = useState({});
   const [warningTarget, setWarningTarget] = useState(null);
 
-  // Guard de ruta (Sin cambios)
   useEffect(() => {
     const guard = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -114,7 +110,6 @@ export default function DashboardProfessor() {
     guard();
   }, [navigate]);
 
-  // Cargar catálogos y mis reservas (Sin cambios significativos)
   useEffect(() => {
     const load = async () => {
       try {
@@ -135,7 +130,6 @@ export default function DashboardProfessor() {
         setHorarios(hs || []);
         setDecanatos(decs || []);
         setAulas(aulasData || []);
-        // Mantener en el dashboard todas menos Canceladas o Completadas
         setReservas(
           (mis || []).filter(
             (r) =>
@@ -146,7 +140,6 @@ export default function DashboardProfessor() {
               r.estado !== ESTADOS_RESERVA.COMPLETADA
           )
         );
-        // Construir mapas (lógica reducida para concisión, se asume correcta)
         setMapEquipos(
           (eqsAll || []).reduce((acc, it) => {
             acc[it.id] = {
@@ -188,11 +181,9 @@ export default function DashboardProfessor() {
     load();
   }, []);
 
-  // Actualizar recursos disponibles (FIX: Formateo de fecha y conversión de ID)
   useEffect(() => {
     const refreshDisponibles = async () => {
       try {
-        // --- VALIDACIÓN Y PREPARACIÓN ---
         if (!fecha || !horaInicioId || !horaFinId || !connectionType) {
           setEquiposDisponibles([]);
           setLaptopsDisponibles([]);
@@ -201,13 +192,12 @@ export default function DashboardProfessor() {
           return;
         }
 
-        const fechaFormateada = format(fecha, "yyyy-MM-dd"); // ✅ Convierte Date a "YYYY-MM-DD"
-        const inicioIdNum = Number(horaInicioId); // ✅ Convierte string a number
-        const finIdNum = Number(horaFinId); // ✅ Convierte string a number
+        const fechaFormateada = format(fecha, "yyyy-MM-dd");
+        const inicioIdNum = Number(horaInicioId);
+        const finIdNum = Number(horaFinId);
         const needHdmi = connectionType === "HDMI";
         const needVga = connectionType === "VGA";
 
-        // --- LLAMADAS A LA API CON DATOS CORRECTOS ---
         const [eqs, laps, exts, aulasDisp] = await Promise.all([
           listEquiposDisponibles({
             dateYYYYMMDD: fechaFormateada,
@@ -242,7 +232,6 @@ export default function DashboardProfessor() {
         setExtensionesDisponibles(exts || []);
         setAulasDisponibles(aulasDisp || []);
 
-        // --- RESET DE SELECCIÓN (Ajustado a strings y 'none') ---
         const equipoIdActualNum = equipoId ? Number(equipoId) : null;
         if (
           equipoIdActualNum &&
@@ -267,7 +256,6 @@ export default function DashboardProfessor() {
           setExtensionId("none");
         }
 
-        // Reset Aula si la seleccionada ya no está disponible
         const aulaIdActualNum = aulaId ? Number(aulaId) : null;
         if (
           aulaIdActualNum &&
@@ -302,7 +290,6 @@ export default function DashboardProfessor() {
     editingReservaId,
   ]);
 
-  // --- LÓGICA DEL FILTRO DE HORARIOS PASADOS ---
   const getAvailableHorariosParaSelect = () => {
     if (!fecha || !isToday(fecha)) {
       return horarios;
@@ -312,13 +299,11 @@ export default function DashboardProfessor() {
 
     return horarios.filter((h) => {
       const timeString = h.hora;
-      const [hStr, mStr] = timeString.split(":"); // Solo necesitamos hora y minuto
+      const [hStr, mStr] = timeString.split(":");
       const horarioHoy = new Date();
 
-      // Seteamos la hora y minuto del horario en el objeto Date de hoy
-      horarioHoy.setHours(parseInt(hStr, 10), parseInt(mStr, 10), 0, 0); // Forzamos segundos/milisegundos a 0
+      horarioHoy.setHours(parseInt(hStr, 10), parseInt(mStr, 10), 0, 0);
 
-      // Compara si la hora del horario es estrictamente posterior a la hora actual
       return horarioHoy > ahora;
     });
   };
@@ -326,7 +311,7 @@ export default function DashboardProfessor() {
 
   const getHorariosNoPasados = () => {
     if (!fecha || !isToday(fecha)) {
-      return horarios; // Muestra todos si no hay fecha o no es hoy
+      return horarios;
     }
 
     const ahora = new Date();
@@ -336,19 +321,16 @@ export default function DashboardProfessor() {
       const [hStr, mStr] = timeString.split(":");
       const horarioHoy = new Date();
 
-      // Seteamos la hora y minuto del horario en el objeto Date de hoy
       horarioHoy.setHours(parseInt(hStr, 10), parseInt(mStr, 10), 0, 0);
       horarioHoy.setSeconds(0);
       horarioHoy.setMilliseconds(0);
 
-      return horarioHoy > ahora; // Compara si la hora es posterior a la hora actual
+      return horarioHoy > ahora;
     });
   };
 
-  // 1. Horarios para el SELECT DE INICIO (Filtrado de horas pasadas HOY)
   const horariosInicioFiltrados = getHorariosNoPasados();
 
-  // 2. Horarios para el SELECT DE FIN (Filtrado después de la hora de inicio)
   const getHorariosFinFiltrados = () => {
     const listaBase = horariosInicioFiltrados;
 
@@ -356,7 +338,6 @@ export default function DashboardProfessor() {
       return listaBase;
     }
 
-    // 1. Encuentra el objeto horario de la hora de inicio seleccionada
     const horarioInicioSeleccionado = horarios.find(
       (h) => String(h.id) === horaInicioId
     );
@@ -365,11 +346,8 @@ export default function DashboardProfessor() {
       return listaBase;
     }
 
-    // 2. Obtiene el string de la hora de inicio (ej: "10:20:00")
     const horaInicioString = horarioInicioSeleccionado.hora;
 
-    // 3. Filtra la lista base para devolver solo los elementos cuya hora es estrictamente mayor (>)
-    //    Esto funciona porque los strings "HH:mm:ss" se comparan alfabéticamente
     return listaBase.filter((h) => h.hora > horaInicioString);
   };
 
@@ -380,16 +358,13 @@ export default function DashboardProfessor() {
       horaFinId &&
       !horariosFinFiltrados.find((h) => String(h.id) === horaFinId)
     ) {
-      // La hora de fin seleccionada ya no está disponible en la lista filtrada
       setHoraFinId("");
     }
   }, [horaInicioId, horariosFinFiltrados, horaFinId]);
 
-  // Función onCreate con guard para evitar cierre del diálogo durante SweetAlert
   const onCreate = async () => {
     setIsCreating(true);
     try {
-      // Validación de campos requeridos
       const missing = [];
       if (!fecha) missing.push("fecha");
       if (!horaInicioId) missing.push("hora de inicio");
@@ -410,12 +385,11 @@ export default function DashboardProfessor() {
           confirmButtonText: "Entendido",
         });
         setTimeout(() => setBlockDialogClose(false), 120);
-        return false; // Sale sin intentar crear
+        return false;
       }
 
-      // La conversión de IDs a Number se hace en createReserva
       await createReserva({
-        dateYYYYMMDD: format(fecha, "yyyy-MM-dd"), // ✅ Convierte Date a String
+        dateYYYYMMDD: format(fecha, "yyyy-MM-dd"),
         startHorarioId: Number(horaInicioId),
         endHorarioId: Number(horaFinId),
         id_equipo: Number(equipoId),
@@ -437,7 +411,6 @@ export default function DashboardProfessor() {
       setTimeout(() => setBlockDialogClose(false), 120);
 
       const mis = await listMisReservas({ futuras: false });
-      // Mantener en dashboard las no canceladas ni completadas
       setReservas(
         (mis || []).filter(
           (r) =>
@@ -448,7 +421,7 @@ export default function DashboardProfessor() {
               r.estado !== ESTADOS_RESERVA.COMPLETADA
         )
       );
-      return true; // Indica éxito para que el footer cierre el modal
+      return true;
     } catch (err) {
       setBlockDialogClose(true);
       await Swal.fire({
@@ -469,7 +442,6 @@ export default function DashboardProfessor() {
     try {
       await cancelReserva({ reservaId: id });
       Swal.fire("Cancelada", "La reserva fue cancelada", "success");
-      // Refrescar y excluir canceladas de la lista de próximas
       const mis = await listMisReservas({ futuras: false });
       setReservas(
         (mis || []).filter(
@@ -512,20 +484,16 @@ export default function DashboardProfessor() {
     fecha && horaInicioId && horaFinId && connectionType;
 
   const handleDisabledClick = (targetName) => {
-    // Si los requisitos NO están completos, muestra el aviso
     if (!requisitosCompletos) {
       setWarningTarget(targetName);
-      // Opcional: Ocultar el aviso después de unos segundos
       setTimeout(() => {
         setWarningTarget(null);
-      }, 3000); // Se oculta después de 3 segundos
+      }, 3000);
     } else {
-      // Si los requisitos SÍ están completos (aunque no debería llamarse aquí), oculta el aviso
       setWarningTarget(null);
     }
   };
 
-  // Helpers para obtener fecha y hora local Caracas desde ISO
   const isoToCaracasParts = (iso) => {
     const d = new Date(iso);
     const parts = new Intl.DateTimeFormat("es-VE", {
@@ -552,12 +520,10 @@ export default function DashboardProfessor() {
       setIsEditMode(true);
       setEditingReservaId(row.id);
 
-      // Fecha desde ISO (Caracas)
       const sp = isoToCaracasParts(row.fecha_hora_inicio);
       const fechaLocal = new Date(sp.y, sp.m - 1, sp.d);
       setFecha(fechaLocal);
 
-      // Derivar HH:mm:ss en Caracas y mapear a IDs de horarios
       const startHHMMSS = `${sp.hh}:${sp.mm}:00`;
       const endParts = isoToCaracasParts(row.fecha_hora_fin);
       const endHHMMSS = `${endParts.hh}:${endParts.mm}:00`;
@@ -566,7 +532,6 @@ export default function DashboardProfessor() {
       setHoraInicioId(hIni ? String(hIni.id) : "");
       setHoraFinId(hFin ? String(hFin.id) : "");
 
-      // Tipo de conexión a partir del equipo actual
       const spec = row.id_equipo ? mapEquipos[row.id_equipo] : null;
       if (spec?.hdmi) setConnectionType("HDMI");
       else if (spec?.vga) setConnectionType("VGA");
@@ -667,7 +632,6 @@ export default function DashboardProfessor() {
         open={openModal}
         onOpenChange={(isOpen) => {
           console.log("onOpenChange disparado. isOpen:", isOpen);
-          // Evita que el diálogo se cierre mientras se muestra un SweetAlert bloqueante
           if (!isOpen && blockDialogClose) {
             console.log("Cierre del diálogo bloqueado por alerta activa");
             return;
@@ -704,7 +668,6 @@ export default function DashboardProfessor() {
 
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* --- FILA DE INICIO --- */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label
                   htmlFor="hora-inicio"
@@ -728,7 +691,6 @@ export default function DashboardProfessor() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* --- FILA DE FIN --- */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="hora-fin" className="text-left sm:text-right">
                   Hora Fin
@@ -749,7 +711,6 @@ export default function DashboardProfessor() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* --- FILA DE FECHA --- */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="fecha" className="text-left sm:text-right">
                   Fecha
@@ -766,7 +727,6 @@ export default function DashboardProfessor() {
                       }`}
                     >
                       <CalendarIcon className="h-4 w-4 mr-2" />{" "}
-                      {/* Ajuste de icono */}
                       {fecha ? (
                         format(fecha, "PP", { locale: es })
                       ) : (
@@ -780,18 +740,16 @@ export default function DashboardProfessor() {
                       selected={fecha}
                       onSelect={(d) => {
                         setFecha(d);
-                        // Cierra el popover al seleccionar una fecha (como en Disponibilidad)
                         setFechaPopoverOpen(false);
                       }}
                       initialFocus
-                      // Deshabilita fechas pasadas y fines de semana (sábado y domingo)
                       disabled={(date) => {
                         const todayStart = startOfDay(new Date());
                         const isPast = date < todayStart;
                         const dow = date.getDay();
                         const isWeekend = dow === 0 || dow === 6;
                         const maxDate = addDays(todayStart, 10);
-                        const isBeyond = date > maxDate; // inclusive del día 10
+                        const isBeyond = date > maxDate;
                         return isPast || isWeekend || isBeyond;
                       }}
                       className={""}
@@ -799,7 +757,6 @@ export default function DashboardProfessor() {
                   </PopoverContent>
                 </Popover>
               </div>
-              {/* --- FILA DE CONEXIÓN --- */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="conexion" className="text-left sm:text-right">
                   Tipo de Conexión
@@ -820,7 +777,6 @@ export default function DashboardProfessor() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* --- FILA DE EQUIPO --- */}
               <div
                 className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
                 onClick={() => handleDisabledClick("equipo")}
@@ -842,12 +798,10 @@ export default function DashboardProfessor() {
                     </SelectTrigger>
                     <SelectContent>
                       {equiposDisponibles.length === 0 ? (
-                        // Si no hay equipos, muestra este mensaje
                         <div className="px-4 py-2 text-sm text-muted-foreground">
                           No hay equipos disponibles para este horario/conexión.
                         </div>
                       ) : (
-                        // Si SÍ hay equipos, muestra las opciones
                         equiposDisponibles.map((e) => (
                           <SelectItem key={e.id} value={String(e.id)}>
                             {e.nombre_equipo}
@@ -858,9 +812,9 @@ export default function DashboardProfessor() {
                   </Select>
                   {!requisitosCompletos && (
                     <div
-                      className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
-                      onClick={() => handleDisabledClick("equipo")} // Llama a la función al hacer clic en la trampa
-                      title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
+                      className="absolute inset-0 z-10 cursor-not-allowed"
+                      onClick={() => handleDisabledClick("equipo")}
+                      title="Selecciona fecha, horas y conexión primero"
                     />
                   )}
 
@@ -871,7 +825,6 @@ export default function DashboardProfessor() {
                   )}
                 </div>
               </div>
-              {/* --- FILA DE LAPTOP --- */}
               <div
                 className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
                 onClick={() => handleDisabledClick("laptop")}
@@ -894,12 +847,10 @@ export default function DashboardProfessor() {
                     <SelectContent>
                       <SelectItem value="none">Ninguna (Opcional)</SelectItem>
                       {laptopsDisponibles.length === 0 ? (
-                        // Muestra mensaje si no hay laptops, además de la opción "Ninguna"
                         <div className="px-4 py-2 text-sm text-muted-foreground">
                           No hay laptops disponibles para este horario.
                         </div>
                       ) : (
-                        // Muestra las laptops disponibles
                         laptopsDisponibles.map((l) => (
                           <SelectItem key={l.id} value={String(l.id)}>
                             {l.nombre_laptop}
@@ -910,9 +861,9 @@ export default function DashboardProfessor() {
                   </Select>
                   {!requisitosCompletos && (
                     <div
-                      className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
-                      onClick={() => handleDisabledClick("laptop")} // Llama a la función al hacer clic en la trampa
-                      title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
+                      className="absolute inset-0 z-10 cursor-not-allowed"
+                      onClick={() => handleDisabledClick("laptop")}
+                      title="Selecciona fecha, horas y conexión primero"
                     />
                   )}
                   {!requisitosCompletos && warningTarget === "laptop" && (
@@ -922,7 +873,6 @@ export default function DashboardProfessor() {
                   )}
                 </div>
               </div>
-              {/* --- FILA DE EXTENSIÓN --- */}
               <div
                 className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
                 onClick={() => handleDisabledClick("extension")}
@@ -959,9 +909,9 @@ export default function DashboardProfessor() {
                   </Select>
                   {!requisitosCompletos && (
                     <div
-                      className="absolute inset-0 z-10 cursor-not-allowed" // Cubre todo el select, cursor indica deshabilitado
-                      onClick={() => handleDisabledClick("extension")} // Llama a la función al hacer clic en la trampa
-                      title="Selecciona fecha, horas y conexión primero" // Tooltip opcional
+                      className="absolute inset-0 z-10 cursor-not-allowed"
+                      onClick={() => handleDisabledClick("extension")}
+                      title="Selecciona fecha, horas y conexión primero"
                     />
                   )}
                   {!requisitosCompletos && warningTarget === "extension" && (
@@ -971,7 +921,6 @@ export default function DashboardProfessor() {
                   )}
                 </div>
               </div>
-              {/* --- FILA DE DECANATO --- */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="decanato" className="text-left sm:text-right">
                   Decanato
@@ -992,7 +941,6 @@ export default function DashboardProfessor() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* --- FILA DE AULA (MODIFICADA) --- */}
               <div
                 className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
                 onClick={() => handleDisabledClick("aula")}
@@ -1000,7 +948,6 @@ export default function DashboardProfessor() {
                 <Label htmlFor="aula" className="text-left sm:text-right">
                   Aula
                 </Label>
-                {/* Combobox de aulas (buscable) */}
                 <div className="col-span-1 sm:col-span-3 relative">
                   <Popover open={aulaOpen} onOpenChange={setAulaOpen}>
                     <PopoverTrigger asChild>
@@ -1130,10 +1077,8 @@ export default function DashboardProfessor() {
                   )}
                 </div>
               </div>
-              {/* --- FIN FILA DE AULA --- */}
             </div>
           </div>
-          {/* Fin del contenido del formulario */}
 
           <DialogFooter className="bottom-0 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 sm:px-6 sm:py-4">
             <Button
@@ -1156,9 +1101,8 @@ export default function DashboardProfessor() {
                 }
               }}
               className="bg-[#0D4D98]"
-              disabled={isCreating} // 👈 Deshabilita mientras carga
+              disabled={isCreating}
             >
-              {/* 👇 Contenido condicional 👇 */}
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1174,13 +1118,12 @@ export default function DashboardProfessor() {
         </DialogContent>
       </Dialog>
 
-      {/* Listado de reservas y encabezado con botón */}
       <div className="lista-reservas">
         <div className="reservas-header flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
           <div className="flex items-center gap-4">
             <h2 className="titleReservas font-bold text-xl">Mis reservas</h2>
             <Link
-              to="/app/disponibilidad" // Ruta a la nueva página
+              to="/app/disponibilidad"
               className="text-sm text-blue-500 hover:underline hover:text-purple-700 ml-[-9px]"
             >
               (Ver disponibilidad general)

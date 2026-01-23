@@ -1,9 +1,7 @@
-// src/components/Header.jsx
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { getUserName } from "../lib/auth";
-// Recibe las props del Layout
 export default function Header({ isCollapsed, toggleSidebar, title }) {
   const [userName, setUserName] = useState("");
 
@@ -25,7 +23,7 @@ export default function Header({ isCollapsed, toggleSidebar, title }) {
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 mr-4 text-white" // Margen a la derecha
+        className="h-8 w-8 mr-4 text-white"
         onClick={toggleSidebar}
         title={isCollapsed ? "Expandir Sidebar" : "Minimizar Sidebar"}
       >
@@ -36,16 +34,13 @@ export default function Header({ isCollapsed, toggleSidebar, title }) {
         )}
       </Button>
 
-      {/* Título truncable para evitar solapamientos en pantallas pequeñas */}
       <h1 className="text-base sm:text-lg font-semibold text-white truncate min-w-0">
         {title}
       </h1>
       <div className="ml-auto flex items-center">
-        {/* Saludo completo en sm+ */}
         <p className="hidden sm:block text-sm text-white truncate max-w-[45vw]">
           Bienvenid@, {displayName || "..."}!
         </p>
-        {/* Versión compacta para móvil */}
         <p className="sm:hidden text-sm text-white truncate max-w-[40vw]">
           {firstName ? `Hola, ${firstName}` : "Hola"}
         </p>

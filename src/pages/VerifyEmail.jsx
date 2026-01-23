@@ -49,14 +49,11 @@ export default function VerifyEmail() {
 
   return (
     <div className="relative min-h-screen w-100% bg-[#0D4D98] md:flex md:min-h-screen md:bg-white">
-      {/* Sidebar md+ */}
       <aside className="hidden md:flex md:w-[30%] bg-[#0D4D98] items-center justify-center">
         <img src={logo} alt="Logo" className="p-10 max-w-[85%] h-auto" />
       </aside>
 
-      {/* Main */}
       <main className="relative z-10 min-h-screen flex-1 flex flex-col items-center justify-center">
-        {/* Logo in mobile */}
         <img
           src={logo}
           alt="Logo"

@@ -1,8 +1,7 @@
-// src/components/AdminSidebar.jsx
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, LogOut, History, Calendar, Package } from "lucide-react";
+import { Home, LogOut, History, Calendar, Package, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Swal from "sweetalert2";
 import logo from "../assets/logo-3.png";
@@ -159,6 +158,32 @@ export default function AdminSidebar({ isCollapsed }) {
               }`}
             >
               Historial
+            </span>
+          </Link>
+        </Button>
+
+        <Button
+          asChild
+          variant={isActive("/admin/reportes") ? "secondary" : "ghost"}
+          className={`w-full ${
+            isCollapsed ? "justify-center" : "justify-start"
+          }`}
+          title="Reportes"
+        >
+          <Link to="/admin/reportes">
+            <FileText
+              className={`h-4 w-4 mr-2 ${
+                isCollapsed ? "md:mr-0 md:ml-2" : "md:mr-2"
+              }`}
+            />
+            <span
+              className={`inline-block transition-all duration-300 ${
+                isCollapsed
+                  ? "md:opacity-0 md:w-0 md:ml-0 md:overflow-hidden md:whitespace-nowrap"
+                  : "md:opacity-100 md:w-auto md:ml-1"
+              }`}
+            >
+              Reportes
             </span>
           </Link>
         </Button>

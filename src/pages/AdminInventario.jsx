@@ -45,7 +45,7 @@ function EstadoBadge({ estado }) {
 export default function AdminInventario() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "equipos";
-  const [tab, setTab] = useState(initialTab); // equipos | laptops | extensiones
+  const [tab, setTab] = useState(initialTab);
   const [loading, setLoading] = useState(true);
   const [equipos, setEquipos] = useState([]);
   const [laptops, setLaptops] = useState([]);
@@ -60,15 +60,12 @@ export default function AdminInventario() {
     document.title = "Inventario | Admin";
   }, []);
 
-  // Sincroniza el query param 'tab' para que el layout pueda ajustar el header
   useEffect(() => {
     const sp = new URLSearchParams(searchParams);
     sp.set("tab", tab);
     setSearchParams(sp, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
-  // Actualiza el título del documento según la pestaña activa
   useEffect(() => {
     const label =
       tab === "equipos"
@@ -109,7 +106,6 @@ export default function AdminInventario() {
 
   const openCreate = () => {
     setIsEdit(false);
-    // Por defecto, al agregar un equipo, el estado debe estar en Activo
     if (tab === "equipos") {
       setForm({ hdmi: false, vga: false, estado: true });
     } else if (tab === "laptops") {

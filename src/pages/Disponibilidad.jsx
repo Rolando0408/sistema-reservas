@@ -1,4 +1,3 @@
-// src/pages/Disponibilidad.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import {
   getHorarios,
@@ -24,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarIcon, Loader2, ArrowLeft } from "lucide-react";
 import { format, startOfDay, set, isAfter, isBefore, addDays } from "date-fns";
 import { es } from "date-fns/locale";
-import { toZonedTime } from "date-fns-tz"; // Para convertir UTC a Local
+import { toZonedTime } from "date-fns-tz";
 import { Link, useLocation } from "react-router-dom";
 
 const TIME_ZONE = "America/Caracas";
@@ -32,14 +31,13 @@ const TIME_ZONE = "America/Caracas";
 export default function Disponibilidad() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
-  const [fecha, setFecha] = useState(startOfDay(new Date())); // Inicia con hoy
+  const [fecha, setFecha] = useState(startOfDay(new Date()));
   const [loading, setLoading] = useState(true);
   const [equipos, setEquipos] = useState([]);
   const [horarios, setHorarios] = useState([]);
   const [reservasDelDia, setReservasDelDia] = useState([]);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  // Carga todos los datos necesarios
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -47,7 +45,7 @@ export default function Disponibilidad() {
         const fechaFormateada = format(fecha, "yyyy-MM-dd");
 
         const [equiposData, horariosData, reservasData] = await Promise.all([
-          getEquipos({ onlyDisponibles: true }), // Solo equipos activos
+          getEquipos({ onlyDisponibles: true }),
           getHorarios(),
           getReservationsForDay({ dateYYYYMMDD: fechaFormateada }),
         ]);
@@ -63,32 +61,26 @@ export default function Disponibilidad() {
     };
 
     loadData();
-  }, [fecha]); // Se ejecuta cada vez que 'fecha' cambia
+  }, [fecha]);
 
-  // Actualiza el título de la página según el contexto (Admin vs Profesor)
   useEffect(() => {
     document.title = isAdmin
       ? "Disponibilidad | Admin"
       : "Disponibilidad | Profesor";
   }, [isAdmin]);
 
-  // --- Lógica de Disponibilidad ---
-  // Memoiza el mapa de disponibilidad para no recalcular en cada render
   const availabilityMap = useMemo(() => {
-    const map = new Map(); // Key: "equipoID-horarioID", Value: true (ocupado)
+    const map = new Map();
 
-    // Convierte las horas de reserva (UTC) a la zona local (Caracas)
     const localReservas = reservasDelDia.map((res) => ({
       id_equipo: res.id_equipo,
       start: toZonedTime(new Date(res.fecha_hora_inicio), TIME_ZONE),
       end: toZonedTime(new Date(res.fecha_hora_fin), TIME_ZONE),
     }));
 
-    // Itera sobre cada equipo y cada horario para construir el mapa
     for (const equipo of equipos) {
       for (const [index, horario] of horarios.entries()) {
         const [hH, mM] = horario.hora.split(":");
-        // Calcula el inicio de este bloque de horario
         const blockStart = set(fecha, {
           hours: parseInt(hH),
           minutes: parseInt(mM),
@@ -96,7 +88,6 @@ export default function Disponibilidad() {
           milliseconds: 0,
         });
 
-        // Calcula el fin de este bloque (asume que es el inicio del siguiente bloque)
         let blockEnd;
         if (horarios[index + 1]) {
           const [nextHH, nextMM] = horarios[index + 1].hora.split(":");
@@ -107,18 +98,15 @@ export default function Disponibilidad() {
             milliseconds: 0,
           });
         } else {
-          // Último bloque del día
           blockEnd = set(fecha, { hours: 23, minutes: 59, seconds: 59 });
         }
 
-        // Comprueba si este bloque (blockStart - blockEnd) está ocupado
         let ocupado = false;
         for (const res of localReservas) {
           if (res.id_equipo === equipo.id) {
-            // Lógica de solapamiento: (InicioA < FinB) y (FinA > InicioB)
             if (blockStart < res.end && blockEnd > res.start) {
               ocupado = true;
-              break; // El bloque está ocupado, no sigas buscando
+              break;
             }
           }
         }
@@ -128,12 +116,10 @@ export default function Disponibilidad() {
     }
     return map;
   }, [equipos, horarios, reservasDelDia, fecha]);
-  // ---------------------------------
 
   return (
     <div className="disponibilidad-page space-y-4 px-4 py-4 sm:px-8 sm:py-6 md:px-20 md:py-8">
       <div className="flex flex-col md:w-full sm:flex-row justify-between">
-        {/* Boton de volver */}
         <div className="flex flex-row items-center w-full">
           <Button variant="outline" size="icon" asChild>
             <Link
@@ -167,14 +153,13 @@ export default function Disponibilidad() {
                     setCalendarOpen(false);
                   }}
                   initialFocus
-                  // Deshabilita fechas pasadas y fines de semana (sábado y domingo)
                   disabled={(date) => {
                     const todayStart = startOfDay(new Date());
                     const isPast = date < todayStart;
                     const dow = date.getDay();
-                    const isWeekend = dow === 0 || dow === 6; // 0=Domingo, 6=Sábado
+                    const isWeekend = dow === 0 || dow === 6;
                     const maxDate = addDays(todayStart, 10);
-                    const isBeyond = date > maxDate; // Permite inclusive el día 10
+                    const isBeyond = date > maxDate;
                     return isPast || isWeekend || isBeyond;
                   }}
                 />
@@ -191,7 +176,6 @@ export default function Disponibilidad() {
         </div>
       ) : (
         <>
-          {/* Vista móvil: tarjetas apiladas con chips desplazables */}
           <div className="block sm:hidden space-y-3">
             {equipos.length === 0 ? (
               <div className="rounded-md border p-4 text-center text-muted-foreground">
@@ -230,16 +214,13 @@ export default function Disponibilidad() {
             )}
           </div>
 
-          {/* Vista escritorio: tabla completa */}
           <div className="hidden sm:block rounded-md border overflow-x-auto">
             <Table className="min-w-max">
-              {/* min-w-max para forzar scroll si no cabe */}
               <TableHeader>
                 <TableRow>
                   <TableHead className="sticky left-0 bg-background font-semibold z-10 w-[150px]">
                     Equipo
                   </TableHead>
-                  {/* Columnas de Horarios */}
                   {horarios.map((h) => (
                     <TableHead key={h.id} className="text-center min-w-[120px]">
                       {h.descripcion}
@@ -250,12 +231,10 @@ export default function Disponibilidad() {
               <TableBody>
                 {equipos.map((equipo) => (
                   <TableRow key={equipo.id}>
-                    {/* Fila de Equipo (pegajosa) */}
                     <TableCell className="sticky left-0 bg-background font-medium z-10 w-[150px]">
                       {equipo.nombre_equipo}
                     </TableCell>
 
-                    {/* Celdas de Disponibilidad */}
                     {horarios.map((horario) => {
                       const isOccupied = availabilityMap.get(
                         `${equipo.id}-${horario.id}`

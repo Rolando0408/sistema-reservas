@@ -17,7 +17,6 @@ import {
   cancelReserva,
   updateReserva,
   listProfesores,
-  // completeReserva,
   toggleEntregaReserva,
   syncEstadosAutomaticos,
   getUsuariosByIds,
@@ -71,7 +70,6 @@ export default function AdminDashboard() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingReservaId, setEditingReservaId] = useState(null);
 
-  // form state
   const [fecha, setFecha] = useState();
   const [horaInicioId, setHoraInicioId] = useState("");
   const [horaFinId, setHoraFinId] = useState("");
@@ -99,7 +97,6 @@ export default function AdminDashboard() {
     const load = async () => {
       try {
         setReservasLoading(true);
-        // Sincroniza estados automáticos (No-Show, Pendiente Retiro/Entrega)
         try { await syncEstadosAutomaticos(); } catch (e) { console.warn(e); }
         const [hs, decs, aulasData, eqsAll, lapsAll, extsAll, profs, allRes] =
           await Promise.all([
@@ -155,9 +152,6 @@ export default function AdminDashboard() {
             return acc;
           }, {})
         );
-        // Construye el mapa de usuarios para mostrar nombres en la tabla.
-        // Preferimos derivarlo de las reservas actuales (ids presentes),
-        // con fallback a la lista completa de profesores si está disponible.
         const idsPresentes = Array.from(
           new Set((allRes || []).map((r) => r.id_usuario).filter(Boolean))
         );
@@ -171,7 +165,6 @@ export default function AdminDashboard() {
               }, {})
             );
           } catch (e) {
-            // Fallback a profesores si falla
             setMapUsuarios(
               (profs || []).reduce((acc, it) => {
                 acc[it.id] = it.nombre_completo || it.email;
@@ -643,7 +636,6 @@ export default function AdminDashboard() {
 
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Profesor */}
               {!isEditMode ? (
                 <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                   <Label htmlFor="profesor" className="text-left sm:text-right">
@@ -766,7 +758,6 @@ export default function AdminDashboard() {
                 </div>
               ) : null}
 
-              {/* Fecha */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="fecha" className="text-left sm:text-right">
                   Fecha
@@ -813,7 +804,6 @@ export default function AdminDashboard() {
                 </Popover>
               </div>
 
-              {/* Hora Inicio */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label
                   htmlFor="hora-inicio"
@@ -838,7 +828,6 @@ export default function AdminDashboard() {
                 </Select>
               </div>
 
-              {/* Hora Fin */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="hora-fin" className="text-left sm:text-right">
                   Hora Fin
@@ -860,7 +849,6 @@ export default function AdminDashboard() {
                 </Select>
               </div>
 
-              {/* Tipo Conexión */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="conexion" className="text-left sm:text-right">
                   Tipo de Conexión
@@ -882,7 +870,6 @@ export default function AdminDashboard() {
                 </Select>
               </div>
 
-              {/* Proyector */}
               <div
                 className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
                 onClick={() => handleDisabledClick("equipo")}
@@ -931,7 +918,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Laptop */}
               <div
                 className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
                 onClick={() => handleDisabledClick("laptop")}
@@ -981,7 +967,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Extensión */}
               <div
                 className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
                 onClick={() => handleDisabledClick("extension")}
@@ -1031,7 +1016,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Decanato */}
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
                 <Label htmlFor="decanato" className="text-left sm:text-right">
                   Decanato
@@ -1053,7 +1037,6 @@ export default function AdminDashboard() {
                 </Select>
               </div>
 
-              {/* Aula */}
               <div
                 className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4"
                 onClick={() => handleDisabledClick("aula")}

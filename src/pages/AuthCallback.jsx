@@ -10,7 +10,6 @@ export default function AuthCallback() {
   useEffect(() => {
     const completeSignIn = async () => {
       try {
-        // Supabase envía un access_token o un code en la URL
         const code = params.get("code");
         if (code) {
           const { data, error } = await supabase.auth.exchangeCodeForSession(
@@ -18,22 +17,18 @@ export default function AuthCallback() {
           );
           if (error) throw error;
         } else {
-          // En algunos casos ya habrá session adjunta sin code
           const { data: sess } = await supabase.auth.getSession();
           if (!sess?.session) {
             throw new Error("No se encontró una sesión tras la confirmación.");
           }
         }
 
-        // Con sesión activa, obtenemos el usuario
         const { data: userData } = await supabase.auth.getUser();
         const user = userData?.user;
         if (!user?.id) throw new Error("No se pudo obtener el usuario.");
 
-        // Recuperar nombre capturado durante signUp (user_metadata.full_name)
         const fullName = user.user_metadata?.full_name || "";
 
-        // Crear/actualizar perfil en tabla usuarios
         const { error: upsertError } = await supabase.from("usuarios").upsert(
           {
             id: user.id,
@@ -68,7 +63,6 @@ export default function AuthCallback() {
     };
 
     completeSignIn();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;

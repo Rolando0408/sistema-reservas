@@ -1,4 +1,3 @@
-// src/layouts/AdminLayout.jsx
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import AdminSidebar from "@/components/AdminSidebar";
@@ -14,7 +13,6 @@ export default function AdminLayout() {
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
-  // Guard: solo rol 1 (admin)
   useEffect(() => {
     const guard = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -59,6 +57,9 @@ export default function AdminLayout() {
       currentPageTitle = `Inventario - ${label}`;
       break;
     }
+    case "/admin/reportes":
+      currentPageTitle = "Reportes";
+      break;
     default:
       currentPageTitle = "Administración";
   }
@@ -69,7 +70,6 @@ export default function AdminLayout() {
     return () => document.body.classList.remove("overflow-hidden");
   }, [isCollapsed]);
 
-  // Actualiza el título del documento según la sección del admin
   useEffect(() => {
     const brand = "UNIMAR Proyecta";
     const prefix =
@@ -79,12 +79,10 @@ export default function AdminLayout() {
     document.title = prefix;
   }, [currentPageTitle]);
 
-  // Cierra automáticamente el sidebar en móvil cuando cambia la ruta
   useEffect(() => {
     if (isMobile && !isCollapsed) {
       setIsCollapsed(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, location.search, isMobile]);
 
   return (

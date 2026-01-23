@@ -1,8 +1,7 @@
-// src/layouts/ProfessorLayout.jsx
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header"; // 👈 1. Importa el nuevo Header
+import Header from "@/components/Header";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ProfessorLayout() {
@@ -29,7 +28,6 @@ export default function ProfessorLayout() {
       currentPageTitle = "UNIMAR Proyecta";
   }
 
-  // Evita scroll del body cuando el sidebar móvil está abierto
   useEffect(() => {
     if (!isCollapsed) {
       document.body.classList.add("overflow-hidden");
@@ -39,7 +37,6 @@ export default function ProfessorLayout() {
     return () => document.body.classList.remove("overflow-hidden");
   }, [isCollapsed]);
 
-  // Actualiza el título del documento según la sección del profesor
   useEffect(() => {
     const brand = "UNIMAR Proyecta";
     const prefix =
@@ -49,17 +46,14 @@ export default function ProfessorLayout() {
     document.title = prefix;
   }, [currentPageTitle]);
 
-  // Cierra automáticamente el sidebar en móvil cuando cambia la ruta
   useEffect(() => {
     if (isMobile && !isCollapsed) {
       setIsCollapsed(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, location.search, isMobile]);
 
   return (
     <div className="relative flex h-screen bg-background">
-      {/* Overlay oscuro para móvil cuando el sidebar está abierto */}
       {!isCollapsed && (
         <div
           className="fixed inset-0 z-30 bg-black/50 backdrop-blur-[2px] md:hidden"
@@ -77,7 +71,6 @@ export default function ProfessorLayout() {
           title={currentPageTitle}
         />
         <main className="flex-1 overflow-y-auto">
-          {/* Área de contenido principal */}
           <Outlet />
         </main>
       </div>
